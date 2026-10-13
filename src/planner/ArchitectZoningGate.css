@@ -1,0 +1,382 @@
+﻿/* â”€â”€ ArchitectZoningGate â€” minimal floating controls over the full-bleed
+   map. The zoning heatmap is drawn directly on the site polygon (see
+   zoningHeatmap.jsx via SVGOverlay in SitePicker); this overlay only adds a
+   thin top bar and a bottom precedent strip â€” no side panel, map stays
+   fully visible and interactive everywhere else.
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+.azg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none; /* let map interactions pass through by default */
+}
+
+.azg-overlay > * {
+  pointer-events: auto; /* re-enable on actual controls */
+}
+
+/* â”€â”€ Floor-plan zoning diagram side panel â”€â”€ */
+.azg-zoning-panel {
+  position: absolute;
+  top: 64px;      /* below the header bar */
+  right: 12px;
+  bottom: 110px;  /* above the precedent strip */
+  width: 260px;
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.azg-zoning-panel-label {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-dim);
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+/* â”€â”€ Header â€” thin floating bar, top â”€â”€ */
+.azg-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  animation: azg-fade-in 0.3s var(--ease-out);
+}
+
+@keyframes azg-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.azg-back {
+  background: none;
+  border: 1px solid var(--line-b);
+  border-radius: var(--radius-pill);
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+  flex-shrink: 0;
+}
+.azg-back:hover { border-color: var(--fg-dimmer); color: var(--fg); }
+
+.azg-header-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.azg-header-step {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-dimmer);
+}
+.azg-header-sub {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--fg);
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.azg-header-rule-badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  border-radius: var(--radius-pill);
+  padding: 0.12rem 0.55rem;
+  background: var(--accent-dim);
+}
+
+.azg-approve {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 400;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s var(--ease-out);
+}
+.azg-approve:hover { background: var(--accent-hover); }
+
+/* â”€â”€ Zoning iteration step-through â€” 10 candidate plans, ranked best-first â”€â”€ */
+.azg-preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.azg-nav-btn {
+  background: none;
+  border: 1px solid var(--line-b);
+  border-radius: var(--radius-pill);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+.azg-nav-btn:hover:not(:disabled) { border-color: var(--fg-dimmer); background: var(--bg-2); }
+.azg-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.azg-preview-count {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  white-space: nowrap;
+}
+
+/* â”€â”€ Targets toggle â€” lives inline in the header now â”€â”€ */
+.azg-targets-toggle {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+.azg-targets-toggle:hover { color: var(--fg); border-color: var(--fg-dimmer); }
+
+.azg-targets-summary {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* â”€â”€ Targets panel â€” floats just under the header when open â”€â”€ */
+.azg-targets-grid--floating {
+  margin: 0 0.85rem;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0.5rem 0.85rem;
+  animation: azg-fade-in 0.25s var(--ease-out);
+}
+
+.azg-target-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.azg-target-row label { font-size: 0.72rem; color: var(--fg-dim); font-family: var(--sans); }
+.azg-target-row input {
+  width: 70px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  padding: 0.2rem 0.4rem;
+  text-align: right;
+}
+
+/* â”€â”€ Precedent picker strip â€” floating bar, bottom â”€â”€ */
+.azg-precedent-strip {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  margin: 0.85rem;
+  padding: 0.6rem;
+  overflow-x: auto;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-b) transparent;
+  animation: azg-fade-in 0.3s var(--ease-out);
+}
+.azg-precedent-strip::-webkit-scrollbar { height: 3px; }
+.azg-precedent-strip::-webkit-scrollbar-track { background: transparent; }
+.azg-precedent-strip::-webkit-scrollbar-thumb { background: var(--line-b); }
+
+.azg-prec-card {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  min-width: 90px;
+}
+.azg-prec-card:hover { border-color: var(--line-b); background: var(--bg-2); }
+.azg-prec-card--active { border-color: var(--accent); background: var(--accent-dim); }
+.azg-prec-card--locked {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  cursor: default;
+}
+.azg-prec-card--locked .azg-prec-name { color: var(--accent); font-weight: 600; }
+
+.azg-prec-name {
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.azg-prec-stats {
+  display: flex;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  color: var(--fg-dimmer);
+}
+
+/* â”€â”€ Design rules section inside the targets panel â”€â”€ */
+.azg-rules-section {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+.azg-rules-heading {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg-dimmer);
+  margin-bottom: 0.45rem;
+}
+.azg-rules-preset-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.azg-rules-preset {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+.azg-rules-preset:hover { color: var(--fg); border-color: var(--fg-dimmer); }
+.azg-rules-preset--active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+.azg-rules-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.azg-rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.azg-rule-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.azg-rule-label {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: var(--fg);
+}
+.azg-rule-hint {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  color: var(--fg-dimmer);
+  white-space: nowrap;
+}
+.azg-rule-toggle {
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.22rem 0.55rem;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+.azg-rule-toggle--on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.azg-rule-select {
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  padding: 0.22rem 0.4rem;
+  cursor: pointer;
+}
+
+.azg-rule-info-val {
+  flex-shrink: 0;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  font-weight: 500;
+}

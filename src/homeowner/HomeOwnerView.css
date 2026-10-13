@@ -1,0 +1,89 @@
+/* ── HomeOwnerView — Apple-style design system ───────────────────
+   Shares tokens from src/index.css.
+   ─────────────────────────────────────────────────────────────── */
+
+.ho-view {
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-2);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  overflow-y: auto;
+  position: relative;
+  padding: 1.5rem 2.5rem 3rem;
+}
+
+.ho-back {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease-out);
+}
+.ho-back:hover { opacity: 0.7; }
+
+.ho-header { margin: 1.5rem 0 1.75rem; }
+.ho-header-kicker {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+}
+.ho-header h1 { font-size: 2rem; font-weight: 600; margin: 0 0 0.4rem; letter-spacing: -0.02em; }
+.ho-header p { font-size: 0.95rem; color: var(--fg-dim); margin: 0; }
+
+.ho-loading { color: var(--fg-dimmer); font-size: 0.85rem; padding: 2rem 0; }
+
+.ho-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.ho-list-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--sans);
+  padding: 1rem 0.25rem;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out);
+  border-radius: var(--radius-sm);
+}
+.ho-list-item:hover { background: var(--bg-3); }
+
+.ho-list-num {
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  color: var(--fg-dimmer);
+  width: 1.6rem;
+  flex-shrink: 0;
+}
+
+.ho-list-body { flex: 1; min-width: 0; }
+.ho-list-name { font-size: 1rem; font-weight: 500; margin-bottom: 0.2rem; }
+.ho-list-meta { font-size: 0.82rem; color: var(--fg-dim); }
+
+.ho-list-arrow {
+  font-family: var(--sans);
+  color: var(--fg-dimmer);
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+.ho-list-item:hover .ho-list-arrow { color: var(--accent); transform: translateX(2px); }

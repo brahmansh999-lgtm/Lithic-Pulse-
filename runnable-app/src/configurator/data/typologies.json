@@ -1,0 +1,138 @@
+{
+  "typologies": [
+    {
+      "id": "1b1p",
+      "label": "1B · 1P",
+      "beds": 1,
+      "persons": 1,
+      "areaM2": 28,
+      "gridX": 3,
+      "gridZ": 2,
+      "storageM3": 2.1,
+      "description": "Studio — minimal footprint, single occupant",
+      "glb": "/1l.glb"
+    },
+    {
+      "id": "1b2p",
+      "label": "1B · 2P",
+      "beds": 1,
+      "persons": 2,
+      "areaM2": 38,
+      "gridX": 4,
+      "gridZ": 2,
+      "storageM3": 3.2,
+      "description": "One-bedroom for couple or shared",
+      "glb": "/2l.glb"
+    },
+    {
+      "id": "2b3p",
+      "label": "2B · 3P",
+      "beds": 2,
+      "persons": 3,
+      "areaM2": 56,
+      "gridX": 4,
+      "gridZ": 3,
+      "storageM3": 4.8,
+      "description": "Two-bedroom, small family",
+      "glb": "/3l.glb"
+    },
+    {
+      "id": "2b4p",
+      "label": "2B · 4P",
+      "beds": 2,
+      "persons": 4,
+      "areaM2": 64,
+      "gridX": 5,
+      "gridZ": 3,
+      "storageM3": 5.6,
+      "description": "Two-bedroom, standard family",
+      "glb": "/4l.glb"
+    },
+    {
+      "id": "3b4p",
+      "label": "3B · 4P",
+      "beds": 3,
+      "persons": 4,
+      "areaM2": 80,
+      "gridX": 5,
+      "gridZ": 4,
+      "storageM3": 6.4,
+      "description": "Three-bedroom, family with study",
+      "glb": "/5l.glb"
+    },
+    {
+      "id": "3b5p",
+      "label": "3B · 5P",
+      "beds": 3,
+      "persons": 5,
+      "areaM2": 88,
+      "gridX": 6,
+      "gridZ": 4,
+      "storageM3": 7.0,
+      "description": "Three-bedroom, larger family",
+      "glb": "/5l.glb"
+    },
+    {
+      "id": "3b6p",
+      "label": "3B · 6P",
+      "beds": 3,
+      "persons": 6,
+      "areaM2": 96,
+      "gridX": 6,
+      "gridZ": 4,
+      "storageM3": 7.8,
+      "description": "Three-bedroom, extended family",
+      "glb": "/3l.glb"
+    },
+    {
+      "id": "4b5p",
+      "label": "4B · 5P",
+      "beds": 4,
+      "persons": 5,
+      "areaM2": 108,
+      "gridX": 6,
+      "gridZ": 5,
+      "storageM3": 8.4,
+      "description": "Four-bedroom, dual-income family",
+      "glb": "/3l.glb"
+    },
+    {
+      "id": "4b6p",
+      "label": "4B · 6P",
+      "beds": 4,
+      "persons": 6,
+      "areaM2": 118,
+      "gridX": 7,
+      "gridZ": 5,
+      "storageM3": 9.2,
+      "description": "Four-bedroom, large family",
+      "glb": "/1l.glb"
+    },
+    {
+      "id": "4b7p",
+      "label": "4B · 7P",
+      "beds": 4,
+      "persons": 7,
+      "areaM2": 128,
+      "gridX": 7,
+      "gridZ": 5,
+      "storageM3": 10.0,
+      "description": "Four-bedroom, 2-storey extended",
+      "glb": "/1l.glb",
+      "twoStorey": true
+    },
+    {
+      "id": "4b8p",
+      "label": "4B · 8P",
+      "beds": 4,
+      "persons": 8,
+      "areaM2": 140,
+      "gridX": 8,
+      "gridZ": 5,
+      "storageM3": 11.2,
+      "description": "Four-bedroom, 2-storey maximum",
+      "glb": "/1l.glb",
+      "twoStorey": true
+    }
+  ]
+}

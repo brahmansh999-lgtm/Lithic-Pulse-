@@ -1,0 +1,182 @@
+/* ─── Intro splash ──────────────────────────────────────────────────────────
+   Full-viewport intro that shares the landing page's near-black background so
+   the handoff reads as one continuous scene. A title lockup (kicker + words +
+   rule line) assembles on the image's two-tone mid-line, then the whole scene
+   zooms through and fades while the landing page emerges from "within" it.
+
+   Performance: every animated property here is transform / opacity / clip
+   only — all GPU-composited, so nothing triggers layout or paint per frame.
+   (No animated blur, no mix-blend-mode — those were the source of the lag.) */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #050504;            /* == landing --bg, so the fade is seamless */
+  overflow: hidden;
+  cursor: default;
+  opacity: 1;
+  transition: opacity 950ms cubic-bezier(0.6, 0, 0.2, 1);
+}
+
+/* ── Zoom-through exit: scene scales up + fades, landing shows through it ── */
+.splash--leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash--leaving .splash-scene {
+  transform: scale(1.55);
+  opacity: 0;
+}
+
+/* The scene scales as one unit during the zoom-through */
+.splash-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: scale(1);
+  transform-origin: center 44%;   /* push "into" the rock, not dead centre */
+  transition:
+    transform 950ms cubic-bezier(0.7, 0, 0.84, 0),
+    opacity   950ms ease;
+  will-change: transform, opacity;
+}
+
+/* ── Procedural site-plan artwork ── */
+.splash-art {
+  position: absolute;
+  inset: 0;
+  /* Slow cinematic drift-in on load (transform + opacity only) */
+  animation: splash-art-in 1500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.splash-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+}
+
+/* Stone/drip reference image — sits behind the procedural canvas, dimmed so
+   the title and dot-grid still read clearly on top of it. */
+.splash-stone-bg {
+  position: absolute;
+  inset: 0;
+  background: url('/splash-stone.jpg') center 30% / cover no-repeat;
+  opacity: 0.22;
+}
+
+/* Vignette — darkens the frame edges so the scene feels lit and grounded */
+.splash-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 44%,
+    rgba(5, 5, 4, 0) 38%,
+    rgba(5, 5, 4, 0.35) 72%,
+    rgba(5, 5, 4, 0.85) 100%
+  );
+  opacity: 0;
+  animation: splash-fade-in 1400ms ease 300ms both;
+}
+
+@keyframes splash-art-in {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes splash-fade-in {
+  to { opacity: 1; }
+}
+
+/* ── Title lockup — sits on the image's two-tone mid-line ──
+   46% lands the lockup on the split line on wide (cropped) screens. */
+.splash-lockup {
+  position: absolute;
+  z-index: 2;
+  top: 46%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  pointer-events: none;
+}
+
+/* User-directed: the splash is just this one line now — no "Lithic Pulse"
+   wordmark, no separate kicker above it — so it carries the statement at
+   headline size/weight instead of reading as a small label with nothing
+   to introduce. Fraunces (the same serif the landing hero uses for "Lithic
+   Pulse"), light weight, open letter-spacing and line-height for a relaxed,
+   unhurried read. Italic per later request (an earlier pass had briefly
+   flipped this to upright). */
+.splash-introducing--solo {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.015em;
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  line-height: 1.32;
+  color: #f6f3ec;
+  text-align: center;
+  text-transform: none;
+  text-shadow: 0 4px 50px rgba(0, 0, 0, 0.85);
+  max-width: 20ch;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  animation: splash-rise 760ms cubic-bezier(0.22, 0.7, 0.25, 1) 200ms both;
+}
+
+/* User-directed: more elongated — a real vertical stretch on the glyphs
+   (not just a bigger font-size), plus Fraunces' own optical-size axis
+   pushed toward its tallest/most display-like cut. Lives on an inner span
+   rather than the parent div so it doesn't fight that div's own entrance
+   transform (translate3d, above) — transforms on the same element compose
+   as one matrix and the animation would have silently overridden this. */
+.splash-introducing-elongate {
+  display: inline-block;
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 144;
+  transform: scaleY(1.22);
+  transform-origin: center;
+  margin-bottom: 14px;
+}
+
+/* Rule line — draws outward across the split line, anchoring the title */
+.splash-rule {
+  width: min(420px, 64vw);
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(240, 236, 226, 0.55) 20%,
+    rgba(240, 236, 226, 0.55) 80%,
+    transparent
+  );
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: splash-draw 900ms cubic-bezier(0.16, 1, 0.3, 1) 780ms both;
+}
+
+@keyframes splash-rise {
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes splash-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-art, .splash-vignette, .splash-introducing--solo,
+  .splash-rule { animation: none; }
+  .splash-introducing--solo { opacity: 1; transform: none; }
+  .splash-vignette { opacity: 1; }
+  .splash-rule { transform: scaleX(1); }
+  .splash--leaving .splash-scene { transform: none; }
+}

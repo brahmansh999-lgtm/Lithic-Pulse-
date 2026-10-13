@@ -1,0 +1,224 @@
+/* ── MassingStage — step 02b, a scored grid of real solid-massing
+   candidates (generateMasterplan() output, scored via scoreAgainstZoning).
+   Full-screen, dark canvas, card grid mirrors PrecedentVariations' pattern.
+   ─────────────────────────────────────────────────────────────── */
+
+.msg-root {
+  position: fixed;
+  inset: 0;
+  z-index: 700;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  animation: msg-fade-in 0.22s ease-out;
+}
+
+@keyframes msg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Header ── */
+.msg-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.msg-back {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(232,228,218,0.7);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.msg-back:hover { border-color: rgba(255,255,255,0.4); color: var(--fg); }
+
+.msg-header-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.msg-header-step {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232,228,218,0.5);
+}
+.msg-header-sub {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--fg);
+  font-weight: 300;
+}
+
+.msg-continue {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.msg-continue:hover { background: var(--fg-dim); }
+.msg-continue:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Card grid body ── */
+.msg-grid-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.5rem 2rem 3rem;
+}
+
+.msg-no-data {
+  margin: 4rem auto;
+  max-width: 460px;
+  text-align: center;
+  color: rgba(232,228,218,0.5);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* ── Best-GLB-match callout banner ── */
+.msg-glb-callout {
+  flex-shrink: 0;
+  margin: 0 2rem;
+  margin-top: 1rem;
+  padding: 0.7rem 1rem;
+  background: rgba(120,200,150,0.08);
+  border: 1px solid rgba(120,200,150,0.3);
+  color: rgba(220,240,225,0.9);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.msg-glb-callout strong { color: var(--fg); }
+
+.msg-card--glb-match {
+  border-color: rgba(120,200,150,0.55);
+}
+.msg-card-glb-badge {
+  background: rgba(120,200,150,0.9);
+  color: #06140a;
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.55rem;
+  text-transform: uppercase;
+}
+.msg-card-glb-score {
+  color: rgba(150,220,170,0.9);
+}
+
+.msg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.1rem;
+}
+
+.msg-card {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s, background 0.15s;
+}
+.msg-card:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.04); }
+.msg-card--selected { border-color: var(--accent); }
+
+.msg-card-thumb {
+  width: 100%;
+  height: 210px;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse 80% 75% at 50% 45%, #1c1c26 0%, #0c0c10 72%, #060608 100%);
+  pointer-events: none;
+}
+.msg-card-thumb canvas { width: 100% !important; height: 100% !important; }
+.msg-box-preview-svg { width: 100%; height: 100%; display: block; }
+
+.msg-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem 0.15rem;
+  font-family: var(--sans);
+}
+.msg-card-label { font-size: 0.78rem; letter-spacing: 0.02em; color: var(--fg); }
+.msg-card-score { font-size: 0.7rem; opacity: 0.6; color: var(--fg); }
+
+.msg-card-stats {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.15rem 0.7rem 0.6rem;
+  font-size: 0.72rem;
+  opacity: 0.55;
+  font-family: var(--sans);
+  color: var(--fg);
+}
+
+/* ── Zoning massing preview (exploded isometric stack) ── */
+.mzp-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* soft radial vignette so the iso study sits in light, not flat black */
+  background: radial-gradient(ellipse 80% 70% at 50% 42%, #1a1a22 0%, #0a0a0c 70%, #050505 100%);
+}
+.mzp-svg { width: 100%; height: 100%; display: block; position: relative; z-index: 1; }
+.mzp-ground-shadow {
+  fill: rgba(0, 0, 0, 0.35);
+}
+
+.mzp-legend {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  background: rgba(8,8,10,0.8);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 0.5rem 0.65rem;
+  font-family: var(--sans);
+  backdrop-filter: blur(4px);
+}
+.mzp-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.mzp-legend-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex-shrink: 0;
+  display: inline-block;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4);
+}
+.mzp-legend-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+  color: rgba(232,228,218,0.88);
+}

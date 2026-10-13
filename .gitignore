@@ -1,0 +1,62 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+node_modules/
+dist/
+build/
+.next/
+.vite/
+Thumbs.db
+!.vscode/settings.json
+
+# Large files (>50 MB) excluded from repo
+/BLDGS/glbXL.glb
+/BLDGS/glblarge.glb
+/BLDGS/glbmedium.glb
+/BLDGS/glbsmall.glb
+/_archive_BLDGS_orig/glbXL.glb
+/_archive_BLDGS_orig/glblarge.glb
+/_archive_BLDGS_orig/glbmedium.glb
+/_textures_src/concrete_raw/nor.png
+/_textures_src/metal_fin/nor.png
+/_textures_src/plaster_white/nor.png
+/bldg_gl/Iteration 10.glb
+/bldg_gl/Iteration 11.glb
+/bldg_gl/Iteration 9.glb
+/bldg_gl/iteration 1.glb
+/bldg_gl/iteration 2.glb
+/bldg_gl/iteration 3.glb
+/bldg_gl/iteration 4.glb
+/bldg_gl/iteration 5.glb
+/bldg_gl/iteration 6.glb
+/bldg_gl/iteration 7.glb
+/bldg_gl/iteration 8.glb
+/public/BLDGS/glbXL.glb
+/runnable-app.zip
+/runnable-app/public/BLDGS/glbXL.glb

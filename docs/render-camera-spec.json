@@ -1,0 +1,72 @@
+{
+  "name": "InteriorCaptureRig — AI render camera",
+  "file": "src/configurator/RoomHeroView.jsx",
+  "purpose": "Auto-position a camera INSIDE a real room of the unit GLB, frame the placed furniture + columns, and capture one screenshot to send to the img2img backend.",
+  "problem_it_solves": "The ROOM*.glb files are a whole flat with no per-room tags. Some GLBs also contain a long building strip (e.g. ROOM2 is ~79m deep) and span two storeys (~4.5m tall). Naive centering put the camera outside, through walls, or near the ceiling.",
+  "steps": [
+    {
+      "step": 1,
+      "name": "Scale setup",
+      "eyeHeight": "floor (box.min.y) + 1.45m — human standing height, independent of the GLB's 4.5m height",
+      "roomReach": "min(12m, max(W,D)) — caps the 'ray escaped' distance to a realistic room scale so a 79m strip doesn't inflate the room size"
+    },
+    {
+      "step": 2,
+      "name": "Collect collision meshes",
+      "detail": "All visible meshes (walls, columns, doors, slab) — NOT furniture (too small, would give false 'enclosed' reads)"
+    },
+    {
+      "step": 3,
+      "name": "Sample grid of candidate standpoints",
+      "gridX": "max(7, min(24, round(W/1.5)))",
+      "gridZ": "max(7, min(40, round(D/1.5))) — denser along the long axis so a strip's rooms aren't skipped",
+      "margin": 0.12,
+      "perPoint": "cast 8 horizontal rays; measure distance to nearest wall in each direction"
+    },
+    {
+      "step": 4,
+      "name": "Probe metrics per point",
+      "enclosedCount": "of 8 rays, how many hit a wall within roomReach*0.8 (a real room hits on most sides)",
+      "minHitDist": "nearest wall — penalised if jammed against a wall/column",
+      "avgDist": "average wall distance ≈ room radius (size proxy)",
+      "bestOpenDist / bestDir": "the single most-open ray",
+      "openCentroid": "average of all ray directions weighted by distance — points toward the BULK of open room volume (used to look INTO the room, not down one wall)"
+    },
+    {
+      "step": 5,
+      "name": "Pick best standpoint",
+      "reject": "enclosedCount < 5 (open/exterior points discarded outright)",
+      "score": "enclosedCount*10 + avgDist*2 + min(minHitDist, 2) — favours the biggest enclosed room (usually the living room)"
+    },
+    {
+      "step": 6,
+      "name": "Aim the camera",
+      "ifFurnitureNearby": {
+        "condition": "pieces within roomRadius*1.15 of the standpoint",
+        "lookAt": "centroid of those furniture pieces, y = eye - H*0.10",
+        "eyePoint": "stand BACK from the cluster (opposite direction) by min(roomRadius*0.85, roomReach*0.5) so furniture is in front of the lens"
+      },
+      "elseNoFurniture": {
+        "lookAt": "standpoint + openCentroid * lookDist (look into the open volume)",
+        "eyePoint": "standpoint offset slightly against openCentroid for depth"
+      }
+    },
+    {
+      "step": 7,
+      "name": "Lens",
+      "fov": "roomRadius < 3 ? 72 (tight bedroom) : roomRadius < 5 ? 62 : 54 (large living room) — wider for small rooms, longer for big ones to reduce distortion",
+      "near": 0.05,
+      "far": "max(W,H,D) * 12"
+    },
+    {
+      "step": 8,
+      "name": "Capture",
+      "detail": "Render after 2 frames (textures/AO settled), downscale canvas to max edge 768px, encode JPEG @0.85 to keep the img2img payload under Cloudflare's request-size limit (avoids HTTP 413)."
+    }
+  ],
+  "downstream": {
+    "endpoint": "POST /api/ai-render",
+    "backend": "server/aiRenderMiddleware.js → Cloudflare Workers AI @cf/runwayml/stable-diffusion-v1-5-img2img",
+    "strength": "0.3 — LOW so the model traces the screenshot (keeps columns/furniture/layout) and only repaints surfaces; high values make it invent a new room"
+  }
+}

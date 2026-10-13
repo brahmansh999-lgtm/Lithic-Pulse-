@@ -1,0 +1,245 @@
+{
+  "sourceFile": "DXF/READ.dxf",
+  "unitTypologyLegend": [
+    "3B4P",
+    "3b6p",
+    "3b5p",
+    "1b1p",
+    "2B3P"
+  ],
+  "floorCount": 7,
+  "zoneBlocks": {
+    "connector__f4to5": {
+      "category": "connector",
+      "x": 0.7792702838461085,
+      "z": 0.7792702838461085,
+      "w": 0.2106902015385521,
+      "d": 0.2106902015385521,
+      "y0": 0.5714285714285714,
+      "y1": 0.8571428571428571,
+      "floorLabel": "f4to5",
+      "rooms": [
+        "CORRIDOOR"
+      ]
+    },
+    "amenity__f4to5": {
+      "category": "amenity",
+      "x": 0.462839303358736,
+      "z": 0.641764805913416,
+      "w": 0.40608552218195404,
+      "d": 0.21350183346716123,
+      "y0": 0.5714285714285714,
+      "y1": 0.8571428571428571,
+      "floorLabel": "f4to5",
+      "rooms": [
+        "SOCIAL SEATING POCKETS",
+        "SOCIAL SEATING POCKETS"
+      ]
+    },
+    "green__f4to5": {
+      "category": "green",
+      "x": 0.5085840649236811,
+      "z": 0.44052203279273106,
+      "w": 0.11913649534307802,
+      "d": 0.2780351974010732,
+      "y0": 0.5714285714285714,
+      "y1": 0.8571428571428571,
+      "floorLabel": "f4to5",
+      "rooms": [
+        "GREEN PATCH FROM BASEMENT",
+        "WATER BODY"
+      ]
+    },
+    "units__f4to5": {
+      "category": "units",
+      "x": 0,
+      "z": 0,
+      "w": 0.45,
+      "d": 1,
+      "y0": 0.5714285714285714,
+      "y1": 0.8571428571428571,
+      "floorLabel": "f4to5",
+      "rooms": []
+    },
+    "connector__f6": {
+      "category": "connector",
+      "x": 0.6819850368548618,
+      "z": 0.6819850368548617,
+      "w": 0.3180149631451382,
+      "d": 0.31801496314513833,
+      "y0": 0.8571428571428571,
+      "y1": 1,
+      "floorLabel": "f6",
+      "rooms": [
+        "CORRIDOOR"
+      ]
+    },
+    "amenity__f6": {
+      "category": "amenity",
+      "x": 0.07963124100990623,
+      "z": 0.4134614195762528,
+      "w": 0.7768353499214422,
+      "d": 0.4119340087514073,
+      "y0": 0.8571428571428571,
+      "y1": 1,
+      "floorLabel": "f6",
+      "rooms": [
+        "SOCIAL SEATING POCKETS",
+        "SOCIAL SEATING POCKETS"
+      ]
+    },
+    "green__f6": {
+      "category": "green",
+      "x": 0.16682245684587954,
+      "z": 0.022274624220216532,
+      "w": 0.22875273903453636,
+      "d": 0.5385595500504223,
+      "y0": 0.8571428571428571,
+      "y1": 1,
+      "floorLabel": "f6",
+      "rooms": [
+        "GREEN PATCH FROM BASEMENT",
+        "WATER BODY"
+      ]
+    },
+    "units__f6": {
+      "category": "units",
+      "x": 0.55,
+      "z": 0,
+      "w": 0.45,
+      "d": 1,
+      "y0": 0.8571428571428571,
+      "y1": 1,
+      "floorLabel": "f6",
+      "rooms": []
+    },
+    "connector__f1to3": {
+      "category": "connector",
+      "x": 0.6739907992886666,
+      "z": 0.38975695811839706,
+      "w": 0.32600920071133344,
+      "d": 0.42124917065343603,
+      "y0": 0.14285714285714285,
+      "y1": 0.5714285714285714,
+      "floorLabel": "f1to3",
+      "rooms": [
+        "CORRIDOOR"
+      ]
+    },
+    "amenity__f1to3": {
+      "category": "amenity",
+      "x": 0.06343824105911028,
+      "z": 0.5973556474141631,
+      "w": 0.8009678267923834,
+      "d": 0.40264435258583686,
+      "y0": 0.14285714285714285,
+      "y1": 0.5714285714285714,
+      "floorLabel": "f1to3",
+      "rooms": [
+        "SOCIAL SEATING POCKETS",
+        "SOCIAL SEATING POCKETS"
+      ]
+    },
+    "green__f1to3": {
+      "category": "green",
+      "x": 0.1499891738613952,
+      "z": 0.005456041781329871,
+      "w": 0.2617541626535205,
+      "d": 0.7552050322863296,
+      "y0": 0.14285714285714285,
+      "y1": 0.5714285714285714,
+      "floorLabel": "f1to3",
+      "rooms": [
+        "GREEN PATCH FROM BASEMENT",
+        "WATER BODY"
+      ]
+    },
+    "units__f1to3": {
+      "category": "units",
+      "x": 0.55,
+      "z": 0,
+      "w": 0.45,
+      "d": 1,
+      "y0": 0.14285714285714285,
+      "y1": 0.5714285714285714,
+      "floorLabel": "f1to3",
+      "rooms": []
+    },
+    "connector__ground": {
+      "category": "connector",
+      "x": 0.26691846105672806,
+      "z": 0.19561480596012581,
+      "w": 0.5734559082789452,
+      "d": 0.7950977682347657,
+      "y0": 0,
+      "y1": 0.14285714285714285,
+      "floorLabel": "ground",
+      "rooms": [
+        "CORRIDOOR",
+        "CORRIDOOR",
+        "CORRIDOOR"
+      ]
+    },
+    "amenity__ground": {
+      "category": "amenity",
+      "x": 0.08985450352688237,
+      "z": 0.08143200371599847,
+      "w": 0.9101454964731176,
+      "d": 0.7493993799553328,
+      "y0": 0,
+      "y1": 0.14285714285714285,
+      "floorLabel": "ground",
+      "rooms": [
+        "SOCIAL SEATING POCKETS",
+        "MULTIPURPOSE SPACE",
+        "RECEPTION / LOBBY",
+        "MINI THEATRE",
+        "SOCIAL SEATING POCKETS",
+        "WC",
+        "GYM"
+      ]
+    },
+    "green__ground": {
+      "category": "green",
+      "x": 0.15153529954331613,
+      "z": 0.044794186356306664,
+      "w": 0.42362581499684215,
+      "d": 0.7057682217085559,
+      "y0": 0,
+      "y1": 0.14285714285714285,
+      "floorLabel": "ground",
+      "rooms": [
+        "MEDITATION SPACE OVERLOOKING THE COURTYARD",
+        "QUIET READING SPACE OVERLOOKING THE COURTYARD",
+        "GAMES ROOM OVERLOOKING THE COURTYARD",
+        "GREEN PATCH FROM BASEMENT",
+        "WATER BODY",
+        "PRIVATE GARDEN"
+      ]
+    },
+    "parking__ground": {
+      "category": "parking",
+      "x": 0.044794186356306664,
+      "z": 0.04796558722789948,
+      "w": 0.14118085805661745,
+      "d": 0.14118085805661745,
+      "y0": 0,
+      "y1": 0.14285714285714285,
+      "floorLabel": "ground",
+      "rooms": [
+        "CAR PARK BASEMENT ENTRY"
+      ]
+    },
+    "units__ground": {
+      "category": "units",
+      "x": 0.55,
+      "z": 0,
+      "w": 0.45,
+      "d": 1,
+      "y0": 0,
+      "y1": 0.14285714285714285,
+      "floorLabel": "ground",
+      "rooms": []
+    }
+  }
+}

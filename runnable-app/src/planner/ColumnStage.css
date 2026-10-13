@@ -1,0 +1,111 @@
+/* ── ColumnStage — step 02c, structural grid fitted to the chosen massing's
+   real building footprints. Reuses MassingStage's shell (.msg-root/.msg-
+   header/.msg-grid-body/.msg-legend/.msg-glb-callout) — only adds the
+   canvas/legend split and stat rows specific to this step.
+   ─────────────────────────────────────────────────────────────── */
+
+.cs-body {
+  display: flex;
+  flex-direction: row;
+  padding: 1.5rem 1.5rem 1.5rem;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 170px);
+}
+
+.cs-canvas {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  /* same vignette as the massing stage so the two stages read as one study */
+  background: radial-gradient(ellipse 75% 70% at 50% 45%, #16161c 0%, #0a0a0c 72%, #050505 100%);
+  border-radius: 4px;
+}
+
+/* Ground slab the columns stand on — a faint plane so columns don't float. */
+.cs-ground-plane {
+  fill: rgba(120, 120, 140, 0.07);
+  stroke: rgba(180, 180, 200, 0.12);
+  stroke-width: 0.4;
+}
+
+/* Right-hand info panel — fixed width so the iso canvas gets the rest. */
+.cs-body .msg-legend {
+  width: 320px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.cs-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 0.5rem;
+}
+.cs-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0.2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  color: rgba(232,228,218,0.8);
+}
+.cs-stat-row span:first-child { opacity: 0.55; }
+
+.cs-note {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: rgba(232,228,218,0.45);
+}
+
+/* ── Column pop-in — each column fades/scales in from its own centre as it
+   appears in the step-through animation (ColumnStage's poppedCount), so
+   the structural placement reads as happening, not a static diagram. SVG
+   doesn't support transform-origin per-element well across browsers for
+   group scaling, so this uses opacity + a quick upward rise instead of a
+   scale transform (visually reads as "popping up" without per-column
+   transform-origin math). ── */
+/* Convergence badge — the visible proof: how close this column layout is to
+   the locked building GLB. Sits in the header next to the Continue button. */
+.cs-converge-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 1rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(90, 209, 160, 0.4);
+  border-radius: 999px;
+  background: rgba(90, 209, 160, 0.08);
+}
+.cs-converge-pct {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #5ad1a0;
+  line-height: 1;
+}
+.cs-converge-label {
+  font-family: var(--sans);
+  font-size: 0.6rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: rgba(90, 209, 160, 0.75);
+}
+
+.cs-column-pop {
+  animation: cs-pop-in 0.32s cubic-bezier(0.2, 0.8, 0.3, 1.4) both;
+}
+@keyframes cs-pop-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

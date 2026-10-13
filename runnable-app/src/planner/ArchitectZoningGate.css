@@ -1,0 +1,367 @@
+/* ── ArchitectZoningGate — minimal floating controls over the full-bleed
+   map. The zoning heatmap is drawn directly on the site polygon (see
+   zoningHeatmap.jsx via SVGOverlay in SitePicker); this overlay only adds a
+   thin top bar and a bottom precedent strip — no side panel, map stays
+   fully visible and interactive everywhere else.
+   ─────────────────────────────────────────────────────────────── */
+
+.azg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none; /* let map interactions pass through by default */
+}
+
+.azg-overlay > * {
+  pointer-events: auto; /* re-enable on actual controls */
+}
+
+/* ── Floor-plan zoning diagram side panel ── */
+.azg-zoning-panel {
+  position: absolute;
+  top: 64px;      /* below the header bar */
+  right: 12px;
+  bottom: 110px;  /* above the precedent strip */
+  width: 260px;
+  background: rgba(6, 6, 10, 0.88);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.azg-zoning-panel-label {
+  font-family: var(--sans, monospace);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(220,215,200,0.35);
+  padding: 7px 10px 5px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+}
+
+/* ── Header — thin floating bar, top ── */
+.azg-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(6, 6, 10, 0.82);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(14px);
+  animation: azg-fade-in 0.22s ease-out;
+}
+
+@keyframes azg-fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.azg-back {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(232,228,218,0.7);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.azg-back:hover { border-color: rgba(255,255,255,0.4); color: var(--fg); }
+
+.azg-header-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.azg-header-step {
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232,228,218,0.5);
+}
+.azg-header-sub {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  color: var(--fg);
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.azg-header-rule-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #e8c97a;
+  border: 1px solid rgba(232,201,122,0.4);
+  padding: 0.1rem 0.4rem;
+  background: rgba(232,201,122,0.07);
+}
+
+.azg-approve {
+  background: #fff;
+  color: #06060a;
+  border: none;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.azg-approve:hover { background: #e8e6df; }
+
+/* ── Zoning iteration step-through — 10 candidate plans, ranked best-first ── */
+.azg-preview-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.azg-nav-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.azg-nav-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.06); }
+.azg-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.azg-preview-count {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: rgba(232,228,218,0.7);
+  white-space: nowrap;
+}
+
+/* ── Targets toggle — lives inline in the header now ── */
+.azg-targets-toggle {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(232,228,218,0.6);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.13s, border-color 0.13s;
+}
+.azg-targets-toggle:hover { color: var(--fg); border-color: rgba(255,255,255,0.3); }
+
+.azg-targets-summary {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* ── Targets panel — floats just under the header when open ── */
+.azg-targets-grid--floating {
+  margin: 0 0.85rem;
+  background: rgba(6, 6, 10, 0.88);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(14px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0.5rem 0.85rem;
+  animation: azg-fade-in 0.18s ease-out;
+}
+
+.azg-target-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.azg-target-row label { font-size: 0.72rem; opacity: 0.8; font-family: var(--sans); }
+.azg-target-row input {
+  width: 70px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  padding: 0.2rem 0.4rem;
+  text-align: right;
+}
+
+/* ── Precedent picker strip — floating bar, bottom ── */
+.azg-precedent-strip {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  margin: 0.85rem;
+  padding: 0.6rem;
+  overflow-x: auto;
+  flex-shrink: 0;
+  background: rgba(6, 6, 10, 0.82);
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(14px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  animation: azg-fade-in 0.22s ease-out;
+}
+.azg-precedent-strip::-webkit-scrollbar { height: 3px; }
+.azg-precedent-strip::-webkit-scrollbar-track { background: transparent; }
+.azg-precedent-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+
+.azg-prec-card {
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+  color: var(--fg);
+  font-family: var(--sans);
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  transition: border-color 0.13s, background 0.13s;
+  min-width: 90px;
+}
+.azg-prec-card:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+.azg-prec-card--active { border-color: #fff; background: rgba(255,255,255,0.07); }
+.azg-prec-card--locked {
+  border-color: #5ad1a0;
+  background: rgba(90,209,160,0.08);
+  cursor: default;
+}
+.azg-prec-card--locked .azg-prec-name { color: #5ad1a0; font-weight: 600; }
+
+.azg-prec-name {
+  font-size: 0.75rem;
+  margin-bottom: 0.3rem;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.azg-prec-stats {
+  display: flex;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  opacity: 0.55;
+}
+
+/* ── Design rules section inside the targets panel ── */
+.azg-rules-section {
+  grid-column: 1 / -1;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+.azg-rules-heading {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232,228,218,0.4);
+  margin-bottom: 0.45rem;
+}
+.azg-rules-preset-row {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+.azg-rules-preset {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(232,228,218,0.6);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.13s, color 0.13s, background 0.13s;
+}
+.azg-rules-preset:hover { color: var(--fg); border-color: rgba(255,255,255,0.3); }
+.azg-rules-preset--active { border-color: #e8c97a; color: #e8c97a; background: rgba(232,201,122,0.06); }
+
+.azg-rules-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.azg-rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.azg-rule-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.azg-rule-label {
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  color: rgba(232,228,218,0.85);
+}
+.azg-rule-hint {
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  color: rgba(232,228,218,0.38);
+  white-space: nowrap;
+}
+.azg-rule-toggle {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(232,228,218,0.5);
+  font-family: var(--sans);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.22rem 0.55rem;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.azg-rule-toggle--on {
+  border-color: #7ec8a0;
+  color: #7ec8a0;
+  background: rgba(126,200,160,0.08);
+}
+.azg-rule-select {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: rgba(232,228,218,0.8);
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  padding: 0.22rem 0.4rem;
+  cursor: pointer;
+}
+
+.azg-rule-info-val {
+  flex-shrink: 0;
+  font-family: var(--sans);
+  font-size: 0.7rem;
+  color: #e8c97a;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}

@@ -1,0 +1,91 @@
+{
+  "masterMoulds": [
+    {
+      "id": "MOULD_COL_01",
+      "name": "Column Quarter Shell",
+      "description": "Cast-stone quarter shell. 4 per column node, interlocking via steel plate + pin.",
+      "castingTimeH": 48,
+      "demoulTimeH": 24,
+      "finishH": 8,
+      "weightKg": 210,
+      "color": "#c8c4bc"
+    },
+    {
+      "id": "MOULD_VLT_03",
+      "name": "Ribbed Vault Fragment",
+      "description": "Doubly-curved vault panel. 2–4 per ceiling bay. Nested mould geometry.",
+      "castingTimeH": 72,
+      "demoulTimeH": 48,
+      "finishH": 12,
+      "weightKg": 145,
+      "color": "#b4b0a8"
+    },
+    {
+      "id": "MOULD_CORE_MAIN",
+      "name": "Service Core Monolith",
+      "description": "Precast geopolymer. Single pour. Houses all MEP verticals.",
+      "castingTimeH": 96,
+      "demoulTimeH": 72,
+      "finishH": 16,
+      "weightKg": 1200,
+      "color": "#8898b0"
+    },
+    {
+      "id": "MOULD_SLAB_01",
+      "name": "Ribbed Slab Deck Panel",
+      "description": "Post-tensioned slab deck. Span up to 6m. Cast flat, rotated on install.",
+      "castingTimeH": 60,
+      "demoulTimeH": 36,
+      "finishH": 10,
+      "weightKg": 380,
+      "color": "#b4b2ae"
+    },
+    {
+      "id": "MOULD_FND_01",
+      "name": "Foundation Anchor Pad",
+      "description": "Seismic anchor pad. Cast in-situ with rebar dowels. Ground-bearing.",
+      "castingTimeH": 36,
+      "demoulTimeH": 24,
+      "finishH": 4,
+      "weightKg": 540,
+      "color": "#c0bdb4"
+    },
+    {
+      "id": "MOULD_PNL_SOLID",
+      "name": "Solid Wall Panel",
+      "description": "Opaque enclosure panel. Full-height. Fixed via concealed channel.",
+      "castingTimeH": 48,
+      "demoulTimeH": 24,
+      "finishH": 8,
+      "weightKg": 290,
+      "color": "#ded8cc"
+    },
+    {
+      "id": "MOULD_PNL_WIN",
+      "name": "Fenestrated Panel",
+      "description": "Wall panel with integrated window rebate. Glazing unit installed post-erection.",
+      "castingTimeH": 48,
+      "demoulTimeH": 24,
+      "finishH": 10,
+      "weightKg": 220,
+      "color": "#d4cfc6"
+    },
+    {
+      "id": "MOULD_BAL_01",
+      "name": "Balcony Cantilever Slab",
+      "description": "Cantilevered balcony. Max 1.5m projection. Bolted to slab deck edge plate.",
+      "castingTimeH": 48,
+      "demoulTimeH": 24,
+      "finishH": 6,
+      "weightKg": 165,
+      "color": "#c8c0b0"
+    }
+  ],
+  "castingSequence": [
+    { "step": 1, "label": "Mould Assembly",    "desc": "Set mould shuttering, apply release agent, insert rebar cage and PT ducts." },
+    { "step": 2, "label": "Material Batching", "desc": "Weigh marble dust, GGBS, Portland cement, basalt fibres. Mix dry. Add water + superplasticiser." },
+    { "step": 3, "label": "Pour & Vibrate",    "desc": "Pour slurry. Table-vibrate to full consolidation. Screed flush." },
+    { "step": 4, "label": "Curing Dwell",      "desc": "Cover with polythene. Maintain 20°C for minimum dwell period per mould spec." },
+    { "step": 5, "label": "Demould & Finish",  "desc": "Strip shutters. Check surface. Apply dry-stone bush-hammer finish where specified." }
+  ]
+}

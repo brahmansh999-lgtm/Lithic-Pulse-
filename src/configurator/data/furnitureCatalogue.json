@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "bed": [
+      { "id": "single",  "label": "Single Bed",  "w": 0.9, "d": 2.0, "h": 0.45, "color": "#c8b89a" },
+      { "id": "double",  "label": "Double Bed",  "w": 1.4, "d": 2.0, "h": 0.45, "color": "#c8b89a" },
+      { "id": "king",    "label": "King Bed",    "w": 1.8, "d": 2.1, "h": 0.45, "color": "#c8b89a" },
+      { "id": "bunk",    "label": "Bunk Bed",    "w": 0.9, "d": 2.0, "h": 1.60, "color": "#a89070" }
+    ],
+    "sofa": [
+      { "id": "2seat",   "label": "2-Seat Sofa", "w": 1.4, "d": 0.85,"h": 0.75, "color": "#7a7068" },
+      { "id": "3seat",   "label": "3-Seat Sofa", "w": 2.0, "d": 0.90,"h": 0.75, "color": "#7a7068" },
+      { "id": "lshaped", "label": "L-Shape Sofa","w": 2.4, "d": 1.60,"h": 0.75, "color": "#7a7068" },
+      { "id": "armchair","label": "Armchair",    "w": 0.8, "d": 0.80,"h": 0.80, "color": "#7a7068" }
+    ],
+    "table": [
+      { "id": "coffee",  "label": "Coffee Table","w": 1.1, "d": 0.55,"h": 0.40, "color": "#9a8878" },
+      { "id": "dining2", "label": "Dining 2P",   "w": 0.8, "d": 0.8, "h": 0.75, "color": "#9a8878" },
+      { "id": "dining4", "label": "Dining 4P",   "w": 1.4, "d": 0.9, "h": 0.75, "color": "#9a8878" },
+      { "id": "dining6", "label": "Dining 6P",   "w": 1.8, "d": 0.9, "h": 0.75, "color": "#9a8878" },
+      { "id": "desk",    "label": "Desk",        "w": 1.2, "d": 0.6, "h": 0.75, "color": "#9a8878" }
+    ],
+    "storage": [
+      { "id": "wardrobe","label": "Wardrobe",    "w": 1.2, "d": 0.6, "h": 2.20, "color": "#b0a898" },
+      { "id": "shelving","label": "Shelving",    "w": 1.0, "d": 0.3, "h": 1.80, "color": "#b0a898" },
+      { "id": "sideboard","label":"Sideboard",   "w": 1.4, "d": 0.45,"h": 0.80, "color": "#b0a898" }
+    ]
+  }
+}

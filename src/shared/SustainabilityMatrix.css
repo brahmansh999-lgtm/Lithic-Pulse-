@@ -1,0 +1,61 @@
+/* ── SustainabilityMatrix — cast stone vs. concrete multi-row comparison ── */
+.sm-root {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  min-width: 260px;
+  font-family: var(--sans);
+}
+
+.sm-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.sm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+.sm-table th {
+  text-align: right;
+  font-weight: 600;
+  color: var(--fg-dimmer);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+.sm-table th.sm-col-cast { color: var(--accent); }
+.sm-table td {
+  padding: 0.32rem 0;
+  text-align: right;
+  color: var(--fg);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.sm-row-label {
+  text-align: left !important;
+  color: var(--fg-dim);
+  white-space: normal !important;
+}
+.sm-win {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.sm-note {
+  margin-top: 0.55rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--line);
+  font-size: 0.6rem;
+  line-height: 1.4;
+  color: var(--fg-dimmer);
+  font-style: italic;
+}

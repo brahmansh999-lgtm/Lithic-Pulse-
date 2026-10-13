@@ -1,0 +1,28 @@
+{
+  "balconies": [
+    { "id": "BAL_NONE",    "label": "None",             "projectionM": 0,   "weightKg": 0,   "costMult": 1.00 },
+    { "id": "BAL_SHALLOW", "label": "Juliet (0.6m)",    "projectionM": 0.6, "weightKg": 80,  "costMult": 1.04 },
+    { "id": "BAL_MID",     "label": "Standard (1.0m)",  "projectionM": 1.0, "weightKg": 130, "costMult": 1.08 },
+    { "id": "BAL_DEEP",    "label": "Extended (1.5m)",  "projectionM": 1.5, "weightKg": 165, "costMult": 1.13 }
+  ],
+  "partitions": [
+    { "id": "PAR_OPEN",   "label": "Open Plan",         "desc": "No internal partitions. Maximum spatial flexibility." },
+    { "id": "PAR_SOFT",   "label": "Soft Partitions",   "desc": "Movable cast-stone screens. Reconfigurable." },
+    { "id": "PAR_FIXED",  "label": "Fixed Partitions",  "desc": "Structural cast-stone walls. Permanent layout." }
+  ],
+  "pigmentation": [
+    { "id": "PIG_NONE",   "label": "Natural",    "hex": "#d4cfc8", "intensity": 0 },
+    { "id": "PIG_WARM",   "label": "Warm Stone", "hex": "#c8a87a", "intensity": 0.15 },
+    { "id": "PIG_COOL",   "label": "Slate",      "hex": "#8898b0", "intensity": 0.25 },
+    { "id": "PIG_DARK",   "label": "Anthracite", "hex": "#3a3a3a", "intensity": 0.45 },
+    { "id": "PIG_TERRA",  "label": "Terracotta", "hex": "#b05a3a", "intensity": 0.30 }
+  ],
+  "glazing": [
+    { "id": "GLZ_STANDARD", "label": "Double Glazed",  "uValue": 1.2 },
+    { "id": "GLZ_TRIPLE",   "label": "Triple Glazed",  "uValue": 0.7 },
+    { "id": "GLZ_SMART",    "label": "Smart Glass",    "uValue": 0.9 }
+  ],
+  "baseCostPerM2": 2200,
+  "labourPerM2": 480,
+  "deliveryCostBase": 3500
+}

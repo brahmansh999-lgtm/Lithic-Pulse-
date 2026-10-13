@@ -1,0 +1,252 @@
+{
+  "materials": [
+    {
+      "id": "MAT_CAST_STONE",
+      "name": "Formative Low-Carbon Cast Stone",
+      "family": "Mineral composite",
+      "swatch": "#d7d2c8",
+      "summary": "Primary structural and facade material. A marble-dust + GGBS binder that cures to a dense, stone-like finish at a fraction of the embodied carbon of OPC concrete.",
+      "composition": [
+        { "label": "Marble dust", "pct": 50.3 },
+        { "label": "GGBS slag", "pct": 20.1 },
+        { "label": "Water", "pct": 16.7 },
+        { "label": "Portland cement", "pct": 11.7 },
+        { "label": "Basalt fibres", "pct": 0.6 },
+        { "label": "Superplasticiser", "pct": 0.4 }
+      ],
+      "props": [
+        { "key": "Density", "val": "2.28 t/m³" },
+        { "key": "Compressive", "val": "48 MPa @ 28d" },
+        { "key": "Embodied CO₂", "val": "−62% vs OPC" },
+        { "key": "Finish", "val": "Bush-hammered / honed" }
+      ],
+      "uses": "Columns, capitals, wall panels, balcony slabs, soffit trim."
+    },
+    {
+      "id": "MAT_GEOPOLYMER",
+      "name": "Heavy Geopolymer Binder",
+      "family": "Alkali-activated",
+      "swatch": "#9aa6b6",
+      "summary": "High-mass binder for cores, slabs and foundations where stiffness and acoustic mass matter more than surface finish. Activated fly-ash / slag system, no Portland cement.",
+      "composition": [
+        { "label": "Fly ash + GGBS", "pct": 68.0 },
+        { "label": "Alkaline activator", "pct": 14.0 },
+        { "label": "Graded aggregate", "pct": 14.0 },
+        { "label": "Water", "pct": 4.0 }
+      ],
+      "props": [
+        { "key": "Density", "val": "2.55 t/m³" },
+        { "key": "Compressive", "val": "62 MPa @ 28d" },
+        { "key": "Embodied CO₂", "val": "−78% vs OPC" },
+        { "key": "Finish", "val": "As-cast (concealed)" }
+      ],
+      "uses": "Service-core monolith, floor slab decks, foundation anchor pads."
+    },
+    {
+      "id": "MAT_BASALT_REBAR",
+      "name": "Basalt Fibre Reinforcement",
+      "family": "Composite rebar",
+      "swatch": "#7d6a52",
+      "summary": "Non-corroding basalt-fibre rebar and mesh replacing steel in all cast-stone elements. Allows thinner covers and eliminates spalling over the building life.",
+      "composition": [
+        { "label": "Basalt fibre", "pct": 80.0 },
+        { "label": "Epoxy vinyl-ester matrix", "pct": 20.0 }
+      ],
+      "props": [
+        { "key": "Tensile", "val": "1100 MPa" },
+        { "key": "Weight", "val": "¼ of steel" },
+        { "key": "Corrosion", "val": "Inert" },
+        { "key": "Cover", "val": "15 mm min" }
+      ],
+      "uses": "Rebar cages and mesh in every cast-stone pour."
+    },
+    {
+      "id": "MAT_PT_TENDON",
+      "name": "Post-Tension Tendon System",
+      "family": "Steel cable",
+      "swatch": "#aab0b4",
+      "summary": "Galvanised 7-wire strand in greased ducts. Tensioned after curing to let slab decks span column-free living zones.",
+      "composition": [
+        { "label": "7-wire HT strand", "pct": 92.0 },
+        { "label": "HDPE duct + grease", "pct": 8.0 }
+      ],
+      "props": [
+        { "key": "Strand", "val": "15.7 mm Ø" },
+        { "key": "Jacking", "val": "75% UTS" },
+        { "key": "Span", "val": "up to 6.0 m" },
+        { "key": "Anchor", "val": "Edge dead-end plate" }
+      ],
+      "uses": "Ribbed slab deck panels, long-span vault bays."
+    }
+  ],
+  "columnTypes": [
+    {
+      "id": "COL_QUARTER",
+      "name": "Quarter-Shell Column",
+      "glb": "/moulds/COLMOL0-A.glb",
+      "material": "MAT_CAST_STONE",
+      "assembly": "4 interlocking quarter shells per node",
+      "tag": "Primary load path",
+      "specs": [
+        { "key": "Section", "val": "400 mm Ø" },
+        { "key": "Lift height", "val": "3.0 m" },
+        { "key": "Weight", "val": "210 kg / shell" },
+        { "key": "Joint", "val": "Steel plate + pin" }
+      ]
+    },
+    {
+      "id": "COL_SECONDARY",
+      "name": "Secondary Column",
+      "glb": "/moulds/COL-B.glb",
+      "material": "MAT_CAST_STONE",
+      "assembly": "Alternate pour batch — perimeter grid",
+      "tag": "Perimeter grid",
+      "specs": [
+        { "key": "Section", "val": "320 mm Ø" },
+        { "key": "Lift height", "val": "3.0 m" },
+        { "key": "Weight", "val": "165 kg / shell" },
+        { "key": "Joint", "val": "Steel plate + pin" }
+      ]
+    },
+    {
+      "id": "COL_CAP",
+      "name": "Base Cap / Frustum",
+      "glb": "/moulds/COLAA0.glb",
+      "material": "MAT_CAST_STONE",
+      "assembly": "1 cap per column foot, taper to pad",
+      "tag": "Load transfer",
+      "specs": [
+        { "key": "Taper", "val": "400→560 mm" },
+        { "key": "Height", "val": "0.4 m" },
+        { "key": "Weight", "val": "120 kg" },
+        { "key": "Bears on", "val": "Anchor pad" }
+      ]
+    },
+    {
+      "id": "COL_CAPITAL",
+      "name": "Star Capital",
+      "glb": "/moulds/COLG-A.glb",
+      "material": "MAT_CAST_STONE",
+      "assembly": "4 quadrant slides per capital",
+      "tag": "Vault springing",
+      "specs": [
+        { "key": "Spread", "val": "560→900 mm" },
+        { "key": "Height", "val": "0.5 m" },
+        { "key": "Weight", "val": "95 kg / quad" },
+        { "key": "Receives", "val": "Vault ribs" }
+      ]
+    },
+    {
+      "id": "COL_HOLLOW",
+      "name": "Hollow-Core Column",
+      "glb": "/moulds/COLO0-0.glb",
+      "material": "MAT_CAST_STONE",
+      "assembly": "Outer shell + void former for services",
+      "tag": "Serviced column",
+      "specs": [
+        { "key": "Section", "val": "450 mm Ø" },
+        { "key": "Void", "val": "180 mm Ø" },
+        { "key": "Weight", "val": "175 kg / shell" },
+        { "key": "Routes", "val": "Rainwater / conduit" }
+      ]
+    }
+  ],
+  "moulds": [
+    {
+      "id": "MOULD_COL_01",
+      "name": "Column Quarter Shell",
+      "glb": "/moulds/COLMOL0-A.glb",
+      "type": "Cast-stone form",
+      "desc": "Cast-stone quarter shell. 4 per column node, interlocking via steel plate + pin.",
+      "stats": [
+        { "key": "Cast", "val": "48 h" },
+        { "key": "Demould", "val": "24 h" },
+        { "key": "Reuse", "val": "40" }
+      ]
+    },
+    {
+      "id": "MOULD_CAP_01",
+      "name": "Base Cap Form",
+      "glb": "/moulds/COLAA0.glb",
+      "type": "Cast-stone form",
+      "desc": "Frustum taper form transferring column load down to the anchor pad.",
+      "stats": [
+        { "key": "Cast", "val": "36 h" },
+        { "key": "Demould", "val": "20 h" },
+        { "key": "Reuse", "val": "40" }
+      ]
+    },
+    {
+      "id": "MOULD_CAPITAL_01",
+      "name": "Capital Quadrant Form",
+      "glb": "/moulds/COLG-A.glb",
+      "type": "Cast-stone form",
+      "desc": "4-part star capital — one of four quadrant slides per springing node.",
+      "stats": [
+        { "key": "Cast", "val": "48 h" },
+        { "key": "Demould", "val": "24 h" },
+        { "key": "Reuse", "val": "40" }
+      ]
+    },
+    {
+      "id": "MOULD_SHELL_01",
+      "name": "Outer Shell Form",
+      "glb": "/moulds/COLO0-0.glb",
+      "type": "Cast-stone form",
+      "desc": "Outer casing mould for the hollow column core with internal void former.",
+      "stats": [
+        { "key": "Cast", "val": "48 h" },
+        { "key": "Demould", "val": "24 h" },
+        { "key": "Reuse", "val": "40" }
+      ]
+    },
+    {
+      "id": "MOULD_EDGE_01",
+      "name": "Edge / Soffit Trim",
+      "glb": "/moulds/EDO.glb",
+      "type": "Cast-stone form",
+      "desc": "Edge detail and soffit trim casting form for slab and balcony perimeters.",
+      "stats": [
+        { "key": "Cast", "val": "30 h" },
+        { "key": "Demould", "val": "16 h" },
+        { "key": "Reuse", "val": "40" }
+      ]
+    },
+    {
+      "id": "MOULD_VLT_03",
+      "name": "Ribbed Vault Fragment",
+      "glb": null,
+      "type": "Cast-stone form",
+      "desc": "Doubly-curved vault panel. 2–4 per ceiling bay. Nested mould geometry.",
+      "stats": [
+        { "key": "Cast", "val": "72 h" },
+        { "key": "Demould", "val": "48 h" },
+        { "key": "Reuse", "val": "30" }
+      ]
+    },
+    {
+      "id": "MOULD_SLAB_01",
+      "name": "Ribbed Slab Deck Panel",
+      "glb": null,
+      "type": "Geopolymer form",
+      "desc": "Post-tensioned slab deck. Span up to 6 m. Cast flat, rotated on install.",
+      "stats": [
+        { "key": "Cast", "val": "60 h" },
+        { "key": "Demould", "val": "36 h" },
+        { "key": "Reuse", "val": "50" }
+      ]
+    },
+    {
+      "id": "MOULD_CORE_MAIN",
+      "name": "Service Core Monolith",
+      "glb": null,
+      "type": "Geopolymer form",
+      "desc": "Precast geopolymer. Single pour. Houses all MEP verticals.",
+      "stats": [
+        { "key": "Cast", "val": "96 h" },
+        { "key": "Demould", "val": "72 h" },
+        { "key": "Reuse", "val": "20" }
+      ]
+    }
+  ]
+}

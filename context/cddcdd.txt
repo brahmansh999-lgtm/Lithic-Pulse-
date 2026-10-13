@@ -1,0 +1,1672 @@
+
+TILL THAT TIME LETS FOCUS ON THE NEXT STAGES SO WHAT IS THE CIURRENT END. WHATS THERE HERE? LETS DECIDE ? HIW IT I GOINF GROM SIT ETO THE END ??
+Let me look at the current state of the project to understand where things stand.
+
+Globpattern: "**/*.{js,ts,html,css,json}"
+Found 101 files
+Globpattern: "src/**/*.{jsx,tsx,ts,js}"
+Found 48 files
+Read e:\PLANNER - Copy\src\App.jsx
+Read e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Read e:\PLANNER - Copy\src\planner\PlanControls.jsx
+Now I have a clear picture. Here's the full pipeline from site to export:
+
+Current End-to-End Flow
+
+LANDING PAGE
+    ↓  role select (Homeowner / Architect / Developer / Manufacturer / Resident)
+
+SITE PICKER  (SitePicker.jsx)
+    → OSM map click / curated preset → bounds + polygon + solar/wind analysis
+    → Architect/Developer: ArchitectZoningGate inside SitePicker
+         → approves zoning targets (FAR, mix, column grid)
+
+PRECEDENT VARIATIONS  (PrecedentVariations.jsx)
+    → 20 scored massing candidates shown as cards
+    → picks one → opens editor with that seed
+
+MASTERPLAN EDITOR  (App.jsx orchestrates)
+    ├── MasterplanViewer.jsx   — 3D canvas (boxes → GLB massing → columns stage)
+    └── PlanControls.jsx       — right panel:
+           seed / concept shuffle
+           unit mix sliders
+           solar/wind azimuth
+           build sequence scrubber
+           "Confirm Design" → stage:'glb'
+
+    ↓  click any unit → "Open Configurator"
+
+CONFIGURATOR  (Configurator.jsx — 7-step overlay)
+    Step 1  Select         — typology picker
+    Step 2  Configure      — RoomConfigurator (balcony / partitions / glazing / columns / mix ratios)
+    Step 3  View Your Home — RoomHeroView (3D room + AI render)
+    Step 4  Manufacture    — ManufacturingWorkflow (BOM, costing, per-unit + site-wide)
+    Step 5  Assemble       — AssemblyVisualizer (sequence animation)
+    Step 6  Source & Deliver — SourcingPanel (supply chain, lead times)
+    Step 7  Export         — ExportPanel (drawings, schedules, JSON)
+
+    ◳ Connected View (FourRolesLive) — all 4 roles in one live screen
+What's actually wired vs. rough
+Stage	Status
+Site pick + OSM bounds	Solid
+Zoning gate + scoring	Solid
+Precedent variations (20 candidates)	Solid
+Masterplan generator (buildings/units/columns)	Solid
+Build sequence scrubber	Solid
+Configurator steps 1-4	Solid
+RoomHeroView (View Your Home)	Exists, AI render gated behind billing
+Assembly Visualizer (step 5)	Exists
+Sourcing Panel (step 6)	Exists
+Export Panel (step 7)	Exists — what exactly does it export?
+What's missing / rough on the back half? The handoff from "Confirm Design" in PlanControls (stage:'glb') back into the Configurator and the Export step — that's where the pipeline gets fuzzy. Want me to dig into ExportPanel and the stage:'glb' logic specifically to see what's actually wired there?
+
+AFTER THE CONFIGUARTOR SECTION IS DONE THE ARCHIETCT CAN INETRVINE AND SUGGEST IF THEY CAN DOIT SOME OTER WAY OR HAS FREEDOM TO GUVE SUGGESTIONS OKAY
+Got it. So after the Configurator's 7 steps, there's an Architect Review / Intervention stage where the architect can:
+
+Look at the configured unit
+Suggest alternative approaches, material swaps, layout changes
+Leave notes/annotations for the homeowner or developer
+Let me check what's at the end of the configurator flow right now before designing this.
+
+Read e:\PLANNER - Copy\src\configurator\ExportPanel.jsx
+Good. Now I have the full picture. Here's the plan:
+
+After step 7 (Export), add Step 8: Architect Review.
+
+The architect sees:
+
+A summary of all choices made (typology, config, materials, cost)
+A free-form annotation/suggestion panel — they can add notes per category (Structure, Envelope, Materials, Layout)
+A status toggle per suggestion: Propose / Query / Approve
+A "Finalise & Send to Client" button that downloads the spec sheet + architect notes as one combined document
+This is additive — one new step in the STEPS array, one new component. No changes to existing steps. Let me build it.
+
+Read e:\PLANNER - Copy\src\configurator\ExportPanel.css
+Globpattern: "src/configurator/configurator-tokens.css"
+Found 1 file
+Read e:\PLANNER - Copy\src\configurator\configurator-tokens.css
+Now I have everything I need. I'll create the ArchitectReview component and wire it as Step 8.
+
+Write e:\PLANNER - Copy\src\configurator\ArchitectReview.jsx
+364 lines
+import { useState } from 'react';
+import { computeBOM, bomSummary } from './utils/computeBOM';
+import layouts from './data/roomLayouts.json';
+import kit from './data/kitOfParts.json';
+import './ArchitectReview.css';
+
+const CATEGORIES = [
+  { id: 'structure',  label: 'Structure',         color: '#a8a49e' },
+  { id: 'envelope',   label: 'Envelope & Facade',  color: '#bcb8b2' },
+  { id: 'materials',  label: 'Material Mix',       color: '#8898b0' },
+  { id: 'layout',     label: 'Layout & Spatial',   color: '#88aacc' },
+  { id: 'services',   label: 'Services & MEP',     color: '#a8c890' },
+  { id: 'general',    label: 'General Notes',      color: '#c0b090' },
+];
+
+const STATUS_OPTIONS = [
+  { id: 'suggest',  label: 'Suggestion', color: '#5ba3c9',  bg: 'rgba(91,163,201,0.12)' },
+  { id: 'query',    label: 'Query',      color: '#f0c040',  bg: 'rgba(240,192,64,0.12)'  },
+  { id: 'approve',  label: 'Approved',   color: '#6dbb82',  bg: 'rgba(109,187,130,0.12)' },
+  { id: 'flag',     label: 'Flag',       color: '#e05c3a',  bg: 'rgba(224,92,58,0.12)'   },
+];
+
+function statusDef(id) {
+  return STATUS_OPTIONS.find(s => s.id === id) || STATUS_OPTIONS[0];
+}
+
+// ── Single annotation card ───────────────────────────────────────
+function NoteCard({ note, onUpdate, onRemove }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(note.text);
+  const st = statusDef(note.status);
+
+  const commit = () => { onUpdate({ ...note, text: draft }); setEditing(false); };
+
+  return (
+    <div className="ar-note-card" style={{ borderLeftColor: st.color }}>
+      <div className="ar-note-header">
+        <div className="ar-note-cat-dot" style={{ background: CATEGORIES.find(c => c.id === note.category)?.color || '#888' }} />
+        <span className="ar-note-cat">{CATEGORIES.find(c => c.id === note.category)?.label}</span>
+
+        <div className="ar-note-status-group">
+          {STATUS_OPTIONS.map(s => (
+            <button
+              key={s.id}
+              className={`ar-status-chip${note.status === s.id ? ' active' : ''}`}
+              style={note.status === s.id ? { background: s.bg, color: s.color, borderColor: s.color } : {}}
+              onClick={() => onUpdate({ ...note, status: s.id })}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="ar-note-actions">
+          <button className="ar-icon-btn" onClick={() => setEditing(e => !e)} title="Edit">✎</button>
+          <button className="ar-icon-btn ar-icon-btn--remove" onClick={onRemove} title="Remove">✕</button>
+        </div>
+      </div>
+
+      {editing ? (
+        <div className="ar-note-edit">
+          <textarea
+            className="ar-textarea"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            rows={3}
+            autoFocus
+          />
+          <div className="ar-note-edit-actions">
+            <button className="ar-btn ar-btn--primary" onClick={commit}>Save</button>
+            <button className="ar-btn ar-btn--ghost" onClick={() => { setDraft(note.text); setEditing(false); }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <p className="ar-note-text">{note.text}</p>
+      )}
+    </div>
+  );
+}
+
+// ── Add note form ────────────────────────────────────────────────
+function AddNoteForm({ onAdd }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [category, setCategory] = useState('general');
+  const [status, setStatus] = useState('suggest');
+
+  const submit = () => {
+    if (!text.trim()) return;
+    onAdd({ id: Date.now(), text: text.trim(), category, status });
+    setText(''); setOpen(false);
+  };
+
+  if (!open) return (
+    <button className="ar-add-btn" onClick={() => setOpen(true)}>+ Add Annotation</button>
+  );
+
+  return (
+    <div className="ar-add-form">
+      <div className="ar-add-form-row">
+        <select className="ar-select" value={category} onChange={e => setCategory(e.target.value)}>
+          {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        <select className="ar-select" value={status} onChange={e => setStatus(e.target.value)}>
+          {STATUS_OPTIONS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+        </select>
+      </div>
+      <textarea
+        className="ar-textarea"
+        placeholder="Write your annotation, suggestion, or query…"
+        value={text}
+        onChange={e => setText(e.target.value)}
+        rows={3}
+        autoFocus
+      />
+      <div className="ar-add-form-actions">
+        <button className="ar-btn ar-btn--primary" onClick={submit}>Add</button>
+        <button className="ar-btn ar-btn--ghost" onClick={() => { setText(''); setOpen(false); }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Summary strip ────────────────────────────────────────────────
+function SummaryStrip({ typology, config }) {
+  const bom = computeBOM(typology, config || {}, layouts);
+  const { totalPieces, totalWeightT } = bomSummary(bom);
+
+  const balcony   = kit.balconies.find(b => b.id === config?.balcony);
+  const partition = kit.partitions.find(p => p.id === config?.partition);
+  const glazing   = kit.glazing.find(g => g.id === config?.glazing);
+
+  const baseCost = typology.areaM2 * kit.baseCostPerM2 * (balcony?.costMult || 1);
+  const labour   = typology.areaM2 * kit.labourPerM2;
+  const total    = baseCost + labour + kit.deliveryCostBase;
+
+  const facts = [
+    { label: 'Typology',   val: typology.label },
+    { label: 'Floor Area', val: `${typology.areaM2} m²` },
+    { label: 'Balcony',    val: balcony?.label || '—' },
+    { label: 'Partitions', val: partition?.label || '—' },
+    { label: 'Glazing',    val: glazing?.label || '—' },
+    { label: 'Parts',      val: `${totalPieces} pcs` },
+    { label: 'Weight',     val: `${totalWeightT} t` },
+    { label: 'Est. Cost',  val: `£${Math.round(total).toLocaleString()}` },
+  ];
+
+  return (
+    <div className="ar-summary">
+      {facts.map(f => (
+        <div key={f.label} className="ar-summary-item">
+          <span className="ar-summary-label">{f.label}</span>
+          <span className="ar-summary-val">{f.val}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Download combined report ─────────────────────────────────────
+function buildReport(typology, config, notes) {
+  const now = new Date();
+  const refId = `AR-${typology.id.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+
+  const balcony   = kit.balconies.find(b => b.id === config?.balcony);
+  const partition = kit.partitions.find(p => p.id === config?.partition);
+  const glazing   = kit.glazing.find(g => g.id === config?.glazing);
+
+  const lines = [
+    '═══════════════════════════════════════════════',
+    '  LITHIC PULSE — ARCHITECT REVIEW',
+    '═══════════════════════════════════════════════',
+    `  Reference  : ${refId}`,
+    `  Date       : ${now.toLocaleDateString('en-GB')}`,
+    '',
+    '── UNIT ────────────────────────────────────────',
+    `  Typology   : ${typology.label}`,
+    `  Floor Area : ${typology.areaM2} m²`,
+    '',
+    '── CONFIGURATION ───────────────────────────────',
+    `  Balcony    : ${balcony?.label || '—'}`,
+    `  Partitions : ${partition?.label || '—'}`,
+    `  Glazing    : ${glazing?.label || '—'}`,
+    '',
+    '── ARCHITECT ANNOTATIONS ───────────────────────',
+  ];
+
+  if (notes.length === 0) {
+    lines.push('  (No annotations added)');
+  } else {
+    const grouped = {};
+    notes.forEach(n => {
+      if (!grouped[n.category]) grouped[n.category] = [];
+      grouped[n.category].push(n);
+    });
+    Object.entries(grouped).forEach(([cat, ns]) => {
+      const catLabel = CATEGORIES.find(c => c.id === cat)?.label || cat;
+      lines.push('', `  ▸ ${catLabel}`);
+      ns.forEach(n => {
+        const stLabel = statusDef(n.status).label.toUpperCase();
+        lines.push(`    [${stLabel}] ${n.text}`);
+      });
+    });
+  }
+
+  lines.push('', '═══════════════════════════════════════════════');
+  return lines.join('\n');
+}
+
+// ── Main ─────────────────────────────────────────────────────────
+export default function ArchitectReview({ typology, config, onBack, onDone }) {
+  const [notes, setNotes] = useState([]);
+  const [filterCat, setFilterCat] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+
+  const addNote    = (n)  => setNotes(prev => [...prev, n]);
+  const updateNote = (n)  => setNotes(prev => prev.map(x => x.id === n.id ? n : x));
+  const removeNote = (id) => setNotes(prev => prev.filter(x => x.id !== id));
+
+  const visible = notes.filter(n =>
+    (filterCat === 'all'    || n.category === filterCat) &&
+    (filterStatus === 'all' || n.status   === filterStatus)
+  );
+
+  const counts = STATUS_OPTIONS.reduce((acc, s) => {
+    acc[s.id] = notes.filter(n => n.status === s.id).length;
+    return acc;
+  }, {});
+
+  const handleDownload = () => {
+    const report = buildReport(typology, config, notes);
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `lithic-pulse-${typology?.id || 'unit'}-architect-review.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="ar-root">
+      {/* Header */}
+      <div className="ar-header">
+        <div className="ar-header-left">
+          <span className="ar-brand">Architect Review</span>
+          {typology && <span className="ar-unit-chip">{typology.label} · {typology.areaM2} m²</span>}
+        </div>
+        <div className="ar-header-right">
+          <div className="ar-count-pills">
+            {STATUS_OPTIONS.map(s => counts[s.id] > 0 && (
+              <span key={s.id} className="ar-count-pill" style={{ color: s.color, borderColor: s.color, background: s.bg }}>
+                {counts[s.id]} {s.label}
+              </span>
+            ))}
+          </div>
+          <button className="ar-btn ar-btn--primary" onClick={handleDownload}>↓ Download Review</button>
+          {onDone && <button className="ar-btn ar-btn--accent" onClick={onDone}>Finalise →</button>}
+        </div>
+      </div>
+
+      <div className="ar-body">
+        {/* Left: unit summary + filters + notes */}
+        <div className="ar-left">
+          <SummaryStrip typology={typology} config={config} />
+
+          {/* Filter bar */}
+          <div className="ar-filters">
+            <div className="ar-filter-group">
+              <span className="ar-filter-label">Category</span>
+              <button className={`ar-filter-btn${filterCat === 'all' ? ' active' : ''}`} onClick={() => setFilterCat('all')}>All</button>
+              {CATEGORIES.map(c => (
+                <button
+                  key={c.id}
+                  className={`ar-filter-btn${filterCat === c.id ? ' active' : ''}`}
+                  onClick={() => setFilterCat(c.id)}
+                  style={filterCat === c.id ? { borderColor: c.color, color: c.color } : {}}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+            <div className="ar-filter-group">
+              <span className="ar-filter-label">Status</span>
+              <button className={`ar-filter-btn${filterStatus === 'all' ? ' active' : ''}`} onClick={() => setFilterStatus('all')}>All</button>
+              {STATUS_OPTIONS.map(s => (
+                <button
+                  key={s.id}
+                  className={`ar-filter-btn${filterStatus === s.id ? ' active' : ''}`}
+                  onClick={() => setFilterStatus(s.id)}
+                  style={filterStatus === s.id ? { borderColor: s.color, color: s.color } : {}}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes list */}
+          <div className="ar-notes-list">
+            {visible.length === 0 && (
+              <div className="ar-notes-empty">
+                {notes.length === 0
+                  ? 'No annotations yet. Add suggestions, queries, or approvals below.'
+                  : 'No annotations match the current filters.'}
+              </div>
+            )}
+            {visible.map(n => (
+              <NoteCard
+                key={n.id}
+                note={n}
+                onUpdate={updateNote}
+                onRemove={() => removeNote(n.id)}
+              />
+            ))}
+          </div>
+
+          <AddNoteForm onAdd={addNote} />
+
+          <div className="ar-nav-row">
+            <button className="ar-btn ar-btn--ghost" onClick={onBack}>← Back to Export</button>
+          </div>
+        </div>
+
+        {/* Right: guidance panel */}
+        <div className="ar-right">
+          <div className="ar-guidance-head">Architect's Lens</div>
+          <div className="ar-guidance-body">
+            <p>Review the client's configured unit against the masterplan intent. Use annotations to record your professional judgement before the spec is locked for manufacture.</p>
+
+            <div className="ar-guidance-section">
+              <div className="ar-guidance-section-title">What to check</div>
+              <ul className="ar-guidance-list">
+                <li>Column grid continuity with adjacent units</li>
+                <li>Glazing U-value vs. orientation (solar gain)</li>
+                <li>Balcony type against party wall conditions</li>
+                <li>Partition layout vs. acoustic separation reqs</li>
+                <li>Material mix deviation from reference recipe</li>
+                <li>MEP routes through structural panels</li>
+                <li>Accessibility & Part M compliance</li>
+              </ul>
+            </div>
+
+            <div className="ar-guidance-section">
+              <div className="ar-guidance-section-title">Annotation types</div>
+              {STATUS_OPTIONS.map(s => (
+                <div key={s.id} className="ar-guidance-status-row">
+                  <span className="ar-guidance-chip" style={{ color: s.color, borderColor: s.color, background: s.bg }}>{s.label}</span>
+                  <span className="ar-guidance-desc">
+                    {s.id === 'suggest' && 'An alternative approach worth considering'}
+                    {s.id === 'query'   && 'Needs clarification from client or engineer'}
+                    {s.id === 'approve' && 'Reviewed and sign-off given'}
+                    {s.id === 'flag'    && 'Must be resolved before manufacture'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+AFTER  THE CONFIGURATOR PANEL AND VIEW UR HOME PANEL BASICLALY JUST BEFORE MANUFACTURING PUT THI SSTAGE
+Good — placing it between View Your Home (step 2) and Manufacture (step 3). Let me write the CSS then rewire the steps.
+
+Write e:\PLANNER - Copy\src\configurator\ArchitectReview.css
+434 lines
+/* ── ArchitectReview — Lithic Pulse design system ──────────────── */
+
+.ar-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Header ── */
+.ar-header {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(5,5,4,0.92);
+  backdrop-filter: blur(12px);
+}
+
+.ar-header-left  { display: flex; align-items: center; gap: 12px; }
+.ar-header-right { display: flex; align-items: center; gap: 10px; }
+
+.ar-brand {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+}
+
+.ar-unit-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  opacity: 0.8;
+  padding: 3px 10px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+}
+
+.ar-count-pills { display: flex; gap: 6px; }
+.ar-count-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border: 1px solid;
+  text-transform: uppercase;
+}
+
+/* ── Buttons ── */
+.ar-btn {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-b);
+  background: transparent;
+  color: var(--fg-dim);
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.ar-btn:hover { background: var(--bg-4); color: var(--fg); border-color: var(--accent-border); }
+.ar-btn--primary { background: var(--bg-3); color: var(--fg); border-color: var(--line-b); }
+.ar-btn--primary:hover { background: var(--bg-4); }
+.ar-btn--accent { background: rgba(240,236,226,0.08); color: var(--fg); border-color: var(--accent-border); }
+.ar-btn--accent:hover { background: rgba(240,236,226,0.14); }
+.ar-btn--ghost { background: transparent; }
+
+/* ── Body layout ── */
+.ar-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.ar-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--line);
+}
+
+.ar-right {
+  width: 280px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 24px 20px;
+  background: var(--bg-2);
+}
+
+/* ── Summary strip ── */
+.ar-summary {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-2);
+}
+
+.ar-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 16px;
+  border-right: 1px solid var(--line);
+  min-width: 100px;
+}
+
+.ar-summary-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+}
+
+.ar-summary-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+/* ── Filters ── */
+.ar-filters {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.ar-filter-group { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+
+.ar-filter-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.ar-filter-btn {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 1px solid var(--line-b);
+  background: transparent;
+  color: var(--fg-dimmer);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ar-filter-btn:hover { color: var(--fg); border-color: var(--accent-border); }
+.ar-filter-btn.active { background: var(--bg-3); color: var(--fg); border-color: var(--accent-border); }
+
+/* ── Notes list ── */
+.ar-notes-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ar-notes-empty {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--fg-dimmer);
+  text-align: center;
+  padding: 32px 0;
+  letter-spacing: 0.04em;
+}
+
+/* ── Note card ── */
+.ar-note-card {
+  background: var(--bg-2);
+  border: 1px solid var(--line-b);
+  border-left: 3px solid;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ar-note-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ar-note-cat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ar-note-cat {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  flex-shrink: 0;
+}
+
+.ar-note-status-group {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.ar-status-chip {
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--line-b);
+  background: transparent;
+  color: var(--fg-dimmer);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ar-status-chip:hover { color: var(--fg); }
+.ar-status-chip.active { font-weight: 700; }
+
+.ar-note-actions { display: flex; gap: 4px; margin-left: auto; }
+
+.ar-icon-btn {
+  font-size: 12px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-b);
+  background: transparent;
+  color: var(--fg-dimmer);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ar-icon-btn:hover { background: var(--bg-3); color: var(--fg); }
+.ar-icon-btn--remove:hover { color: var(--red); border-color: var(--red); }
+
+.ar-note-text {
+  font-size: 12px;
+  color: var(--fg-dim);
+  line-height: 1.55;
+  padding-left: 14px;
+}
+
+.ar-note-edit { display: flex; flex-direction: column; gap: 6px; }
+.ar-note-edit-actions { display: flex; gap: 6px; }
+
+/* ── Textarea ── */
+.ar-textarea {
+  width: 100%;
+  background: var(--bg-3);
+  border: 1px solid var(--line-b);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.ar-textarea:focus { border-color: var(--accent-border); }
+
+/* ── Add form ── */
+.ar-add-btn {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 9px 16px;
+  background: var(--bg-2);
+  border: 1px dashed var(--line-b);
+  border-left: none;
+  border-right: none;
+  color: var(--fg-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.12s;
+}
+.ar-add-btn:hover { background: var(--bg-3); color: var(--fg); border-style: solid; }
+
+.ar-add-form {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ar-add-form-row { display: flex; gap: 8px; }
+.ar-add-form-actions { display: flex; gap: 8px; }
+
+.ar-select {
+  flex: 1;
+  background: var(--bg-3);
+  border: 1px solid var(--line-b);
+  color: var(--fg-dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 8px;
+  outline: none;
+  cursor: pointer;
+}
+.ar-select:focus { border-color: var(--accent-border); }
+
+/* ── Nav row ── */
+.ar-nav-row {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+/* ── Right guidance panel ── */
+.ar-guidance-head {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  margin-bottom: 16px;
+}
+
+.ar-guidance-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ar-guidance-body > p {
+  font-size: 11px;
+  color: var(--fg-dim);
+  line-height: 1.6;
+}
+
+.ar-guidance-section { display: flex; flex-direction: column; gap: 8px; }
+
+.ar-guidance-section-title {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ar-guidance-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ar-guidance-list li {
+  font-size: 10px;
+  color: var(--fg-dim);
+  line-height: 1.5;
+  padding-left: 10px;
+  position: relative;
+}
+.ar-guidance-list li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: var(--fg-dimmer);
+}
+
+.ar-guidance-status-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ar-guidance-chip {
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ar-guidance-desc {
+  font-size: 10px;
+  color: var(--fg-dim);
+  line-height: 1.5;
+}
+Now wire it into Configurator.jsx as step 3 (between View Your Home and Manufacture), pushing Manufacture → 4, Assemble → 5, etc.
+
+Edit e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Added 1 line
+Edit e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Added 1 line
+Now update the step renders inside the JSX body:
+
+Edit e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Added 8 lines
+Also fix the role card shortcuts — Manufacturer was hard-coded to step 3, now it's step 4:
+
+Edit e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Modified
+Done. Here's exactly what was built and where it sits:
+
+New pipeline order:
+
+
+Step 1  Select
+Step 2  Configure
+Step 3  View Your Home
+Step 4  ← ARCHITECT REVIEW  (new)
+Step 5  Manufacture
+Step 6  Assemble
+Step 7  Source & Deliver
+Step 8  Export
+What the Architect Review step does:
+
+Shows a unit summary strip at the top — typology, area, config choices, part count, total weight, estimated cost — pulled live from the real BOM
+Annotation cards — architect adds notes per category (Structure / Envelope / Materials / Layout / Services / General)
+Each note has a status toggle: Suggestion / Query / Approved / Flag
+Notes can be filtered by category or status
+A guidance panel on the right lists what to check (glazing vs. orientation, column continuity, acoustic separation, etc.) and what each status type means
+Download Review exports a combined .txt with the unit spec + all annotations
+Finalise → button advances to Manufacture (step 5)
+Back returns to View Your Home (step 3)
+in assmeble section indtead of putting teh furnture layer just use the furnture peopleactualy put in their homes ? got it ?
+Let me look at the current AssemblyVisualizer to understand what it's doing.
+
+Read e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx
+Now I see it clearly. The Furniture phase (phase 3) uses the GLB's built-in furniture layer — generic geometry baked into the model. The user wants it to show the actual furniture the person placed in RoomConfigurator instead.
+
+Let me check what placedFurniture looks like from RoomConfigurator.
+
+Read e:\PLANNER - Copy\src\configurator\RoomConfigurator.jsx
+Good — placedFurniture is an array of items with id, w, d, h, color, x, z, rot from the drag-and-drop layout. Now I need to pass placedFurniture into AssemblyVisualizer and render those boxes as the furniture phase instead of the GLB's baked furniture layer.
+
+Read e:\PLANNER - Copy\src\configurator\RoomConfigurator.jsx (lines 81-140)
+Good — each placed item has x, z, rot (placement) and w, d, h, color, label (dimensions). Now I'll modify AssemblyVisualizer to:
+
+Accept placedFurniture as a prop
+Hide the GLB's baked furniture layer during the Furniture phase
+Instead render the actual placed furniture items as boxes rising in on phase 3
+Edit e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx
+Added 68 lines
+Now I need to: (1) suppress the GLB furniture layer by adding it to the initial hidden set, (2) pass placedFurniture + floorY into AssemblyCanvas, and (3) render PlacedFurnitureLayer inside the canvas. Let me read the relevant section first.
+
+Read e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx (lines 309-418)
+Read e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx (lines 241-310)
+Now I'll make the changes:
+
+Add placedFurniture + floorY to AssemblyCanvas
+Compute floorY from scene bounds
+Suppress GLB furniture layer when placed furniture exists
+Render PlacedFurnitureLayer inside canvas
+Initialize hidden with furniture pre-hidden when placedFurniture has items
+Edit e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx
+Added 1 line
+Edit e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx
+Added 18 lines
+Now pass placedFurniture through from the main component into the canvas:
+
+Edit e:\PLANNER - Copy\src\configurator\AssemblyVisualizer.jsx
+Added 1 line
+Now wire placedFurniture from Configurator.jsx into the AssemblyVisualizer call — it's now step 5:
+
+Edit e:\PLANNER - Copy\src\configurator\Configurator.jsx
+Added 1 line
+Done. Here's what changed:
+
+Assembly step now uses your actual placed furniture:
+
+When you've placed items in RoomConfigurator (beds, sofas, tables, etc.), the Assemble step hides the GLB's generic baked furniture layer and instead renders your exact pieces — correct dimensions (w/d/h), material colors (fabric/wood/metal/concrete), and position/rotation from your layout
+They rise in on Phase 3 with the same slow cinematic float-up animation as all other layers
+If you placed nothing in Configure, it falls back silently to the original GLB furniture layer
+The layer toggle still works — toggling "Furniture" hides/shows your placed items
+
+image.jpeg
+1600×850
+
+image.jpeg
+1600×847
+
+image.jpeg
+1600×850
+search where these istes are teh sites are highlighted in orange
+These three screenshots show the Site Selection step of your GIS Analysis Platform, with three different real London brownfield sites highlighted in orange:
+
+Connaught Tunnel East Site (Crossrail) — a small triangular site (3,524 m², 146m × 102m) near North Woolwich Road / Connaught Road, just south of London City Airport, sandwiched between the DLR/Crossrail tunnel portal area and the Royal Connaught Apartments.
+
+London Sustainable Industries Park South Plot 10 — a medium site (1.39 ha, 141m × 151m) on Choats Road in Dagenham/Rainham, just southwest across the road from the larger "London Sustainable Industries Park" (shown in dark red as context, not selected).
+
+Royal Albert Dock — a large site (2.57 ha, 370m × 94m) — the western dock basin frontage along Royal Albert Way/Dockside Road near Beckton, with the eastern dock section (also Royal Albert Dock) shown in dark red as a neighboring parcel.
+
+All three are flagged as brownfield, planning status "Not specified," and sit along the Docklands Light Railway / Royal Docks corridor in East London (Newham/Beckton/Dagenham area).
+
+Did you want me to look at something specific about these — e.g. find them in the app's curatedSites.js data, check why they're rendering with this orange/red dual-color scheme, or something else?
+
+we  would be usimg these sites
+Got it — noted that these three sites (Connaught Tunnel East, London Sustainable Industries Park South Plot 10, Royal Albert Dock) are the ones you'll be working with going forward.
+
+Grep "Connaught Tunnel East|Royal Albert Dock|Sustainable Industries Park" (in e:\PLANNER - Copy\src\planner\curatedSites.js)
+1 line of output
+Grep "Connaught Tunnel East|Royal Albert Dock|Sustainable Industries Park" (in e:\PLANNER - Copy\src)
+1 line of output
+These names aren't hardcoded anywhere in src — they're being generated dynamically (likely from live OSM reverse-geocoding/naming, per the site-boundary-extraction memory noting live OSM is the primary boundary source). Let me check how sites get their labels and bounds.
+
+Read e:\PLANNER - Copy\src\planner\curatedSites.js
+This file holds 4 different curated sites (Quebec Way, Stanley Park Road, BP Nightingale, Hillside) — not the three from your screenshots at all. So your screenshots are coming from a different app/page entirely ("Architectural Site Analysis — GIS Analysis Platform"), not this Configurator/Planner codebase.
+
+Grep "GIS Analysis Platform|Architectural Site Analysis|brownfield_london" (in e:\PLANNER - Copy\src)
+4 lines of output
+Grep "GIS Analysis Platform|Architectural Site Analysis" (in e:\PLANNER - Copy\src)
+1 line of output
+That title text ("Architectural Site Analysis", "GIS Analysis Platform") doesn't exist anywhere in this codebase's source. Let me check useBrownfieldData.js to see how site names/labels actually get assigned, since the names in your screenshots could be coming from the real GeoJSON data this app loads.
+
+Read e:\PLANNER - Copy\src\planner\useBrownfieldData.js
+This confirms it: site names like "Connaught Tunnel East Site (Crossrail)" and "Royal Albert Dock" come straight from public/brownfield_london.geojson's properties.name/address, loaded by useBrownfieldData(). So these aren't a different app — they're real entries in this project's own brownfield dataset, just not the 4 currently in curatedSites.js (CURATED_SITE_IDS = [687, 1339, 238, 568]).
+
+To use these three as the active curated sites, I'd need to find their actual id values in the GeoJSON. Let me check.
+
+Bash
+IN
+node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+let id = 1;
+const targets = ['connaught tunnel', 'royal albert dock', 'sustainable industries park'];
+for (const f of data.features) {
+  const name = (f.properties.name || f.properties.address || '').toLowerCase();
+  if (targets.some(t => name.includes(t))) {
+    console.log(id, '|', f.properties.name || f.properties.address, '|', f.properties.status, '|', f.properties.hectares, 'ha');
+  }
+  id++;
+}
+"
+
+OUT
+(Bash completed with no output)
+seach for them using our codebase and find where are they
+No output means the script likely ran from the wrong directory or the file path differs. Let me check.
+
+Globpattern: "**/brownfield_london.geojson"
+Found 3 files
+The file exists at e:\PLANNER - Copy\public\brownfield_london.geojson but my bash command ran in a different cwd (Bash tool's shell). Let me rerun with the correct absolute path.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+console.log('total features:', data.features.length);
+let id = 1;
+const targets = ['connaught tunnel', 'royal albert dock', 'sustainable industries park'];
+for (const f of data.features) {
+  const name = (f.properties.name || f.properties.address || '').toLowerCase();
+  if (targets.some(t => name.includes(t))) {
+    console.log(id, '|', f.properties.name || f.properties.address, '|', f.properties.status, '|', f.properties.hectares, 'ha');
+  }
+  id++;
+}
+"
+
+OUT
+total features: 1720
+No matches by name. Let me search more loosely — partial words, since the GeoJSON property naming might differ from the display label.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+let id = 1;
+const targets = ['connaught', 'albert dock', 'sustainable industries', 'dagenham', 'choats'];
+for (const f of data.features) {
+  const name = ((f.properties.name||'') + ' ' + (f.properties.address||'')).toLowerCase();
+  if (targets.some(t => name.includes(t))) {
+    console.log(id, '|', f.properties.name, '|', f.properties.address, '|', f.properties.status, '|', f.properties.hectares, 'ha');
+  }
+  id++;
+}
+"
+
+OUT
+389 | Woodward Road Garages, Dagenham | Woodward Road Garages, Dagenham | Not permissioned | 0.12 ha
+394 | 5-9 Connaught House Connaught Gardens London N10 3LH | 5-9 Connaught House Connaught Gardens London N10 3LH | Permissioned | 0.12 ha
+499 | Garages, Gale Street, Dagenham | Garages, Gale Street, Dagenham | Not permissioned | 0.19 ha
+998 | “Connaught Estate, land south of Sandy Hill Lane west of Brookhill Rd Woolwich“ | “Connaught Estate, land south of Sandy Hill Lane west of Brookhill Rd Woolwich“ | Permissioned | 3.03 ha
+1008 | Dagenham Leisure Park, Cook Road, Dagenham | Dagenham Leisure Park, Cook Road, Dagenham | Not permissioned | 3.4 ha
+None of these match exactly — no "Connaught Tunnel East Site (Crossrail)", no "Royal Albert Dock", no "London Sustainable Industries Park South Plot 10" in this codebase's brownfield_london.geojson. These three site names don't exist in this project's data at all.
+
+Findings:
+
+The screenshots' UI ("Architectural Site Analysis", "GIS Analysis Platform", step labels "01 Site Selection / 02 Site Analysis / 03 Urban Strategy", the "DOWNLOAD SITE CONTEXT DXF" button) doesn't match anything in this codebase — no matching strings anywhere in src/.
+The exact site names from your screenshots aren't in this project's public/brownfield_london.geojson (1,720 features) — I searched for "connaught", "albert dock", "sustainable industries", "dagenham", "choats" and got only unrelated partial matches.
+This codebase's actual curated sites are 4 different ones in src/planner/curatedSites.js: Quebec Way (SE16), Stanley Park Road (Sutton), BP Nightingale Service Station (Balham), and Hillside/Fountain Drive.
+Conclusion: those screenshots are from a different application/project — not this one (e:\PLANNER - Copy). If you want to actually use Connaught Tunnel East, Royal Albert Dock, and London Sustainable Industries Park South Plot 10 here, I'd need to either:
+
+Find the other project's source/data that has those sites, or
+Add them manually with real coordinates (lat/lng polygon + dimensions) into this codebase.
+Which would you like?
+
+search uding osm them and see where we get these exact shapes ?
+I'll query OpenStreetMap's Overpass API to find these three sites and pull their real boundary polygons.
+
+Now let me query Overpass API directly for these three named features in London.
+
+Bash
+IN
+curl -s "https://nominatim.openstreetmap.org/search?q=Royal+Albert+Dock,+London&format=json&polygon_geojson=1&limit=3" -H "User-Agent: planner-app-research/1.0"
+
+OUT
+[{"place_id":100352937,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":121158887,"lat":"51.5061399","lon":"0.0580330","class":"water","type":"basin","place_rank":22,"importance":0.324096928576472,"addresstype":"basin","name":"Royal Albert Dock","display_name":"Royal Albert Dock, Cyprus, London Borough of Newham, Greater London, England, United Kingdom","boundingbox":["51.5044773","51.5075831","0.0403495","0.0687465"],"geojson":{"type":"Polygon","coordinates":[[[0.0403495,51.506572],[0.0408354,51.5065586],[0.0408847,51.5065555],[0.0409279,51.5065427],[0.0409648,51.5065244],[0.041239,51.5063307],[0.0555811,51.5058808],[0.0575843,51.5058179],[0.0669729,51.5055234],[0.0670056,51.505519],[0.0670608,51.5055035],[0.0671545,51.5054701],[0.0672195,51.5054409],[0.0672839,51.5054052],[0.067339,51.5053692],[0.0673892,51.5053288],[0.0674342,51.5052849],[0.067748,51.5048807],[0.0677422,51.5048789],[0.0677794,51.504831],[0.0677853,51.5048327],[0.0680284,51.5045196],[0.0680391,51.5045053],[0.0680481,51.5044905],[0.0680486,51.5044773],[0.0682074,51.5046036],[0.0683588,51.5047345],[0.0683437,51.5047424],[0.0683334,51.5047539],[0.0680841,51.5050773],[0.0680781,51.505087],[0.0680785,51.5050974],[0.0680845,51.5051063],[0.0680952,51.5051133],[0.0687291,51.5054692],[0.0687433,51.5059491],[0.0687465,51.5064023],[0.0673969,51.5068516],[0.0642501,51.5069497],[0.0641641,51.5069015],[0.061233,51.5069939],[0.0425998,51.5075831],[0.0425591,51.5075733],[0.0410787,51.5072373],[0.0405677,51.5071239],[0.0405052,51.5071092],[0.0404952,51.5069146],[0.0404863,51.5068932],[0.0404685,51.5068742],[0.0404418,51.5068583],[0.0404089,51.5068477],[0.0403725,51.5068434],[0.040361,51.5067077],[0.0403495,51.506572]]]}},{"place_id":100606557,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":487502304,"lat":"51.5078477","lon":"0.0582574","class":"landuse","type":"brownfield","place_rank":24,"importance":0.08009307927061872,"addresstype":"brownfield","name":"Royal Albert Dock","display_name":"Royal Albert Dock, Cyprus, London Borough of Newham, Greater London, England, E16 2XD, United Kingdom","boundingbox":["51.5071340","51.5085393","0.0541708","0.0604838"],"geojson":{"type":"Polygon","coordinates":[[[0.0541708,51.5072968],[0.0552783,51.5072695],[0.0561286,51.507246],[0.056236,51.507243],[0.0563098,51.507241],[0.0597034,51.507134],[0.0597313,51.5076381],[0.0597358,51.5076826],[0.060339,51.5076622],[0.0603393,51.507713],[0.0604654,51.5077108],[0.0604838,51.5082016],[0.0604811,51.5082817],[0.0604382,51.5083518],[0.0602907,51.5084219],[0.0601378,51.5084353],[0.06006,51.50824],[0.0599918,51.5082446],[0.0599366,51.5082483],[0.0598698,51.5083742],[0.0555857,51.5085154],[0.055581,51.5085393],[0.0554905,51.5085208],[0.0554759,51.5084166],[0.0556169,51.5084128],[0.0555968,51.5081757],[0.0555378,51.5081776],[0.0554828,51.5081799],[0.05546,51.5081957],[0.0550173,51.5082069],[0.0549925,51.5079847],[0.0548318,51.5079912],[0.0548518,51.508212],[0.0546866,51.508217],[0.0546357,51.5082182],[0.0543872,51.5082241],[0.0543851,51.5082091],[0.0542511,51.5082131],[0.0542354,51.5079704],[0.0555777,51.5079348],[0.0557148,51.5079311],[0.0557229,51.5079645],[0.0558474,51.5079647],[0.0558642,51.5082092],[0.0569947,51.5081792],[0.056975,51.507892],[0.0560499,51.5079166],[0.0560407,51.5078034],[0.0560853,51.5077852],[0.0560857,51.5077572],[0.0560863,51.5077185],[0.0541967,51.5077692],[0.0541708,51.5072968]]]}},{"place_id":100548047,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":854490898,"lat":"51.5081960","lon":"0.0511176","class":"landuse","type":"brownfield","place_rank":24,"importance":0.08009307927061872,"addresstype":"brownfield","name":"Royal Albert Dock","display_name":"Royal Albert Dock, Beckton, London Borough of Newham, Greater London, England, United Kingdom","boundingbox":["51.5078728","51.5087169","0.0490098","0.0543496"],"geojson":{"type":"Polygon","coordinates":[[[0.0490098,51.5080805],[0.0491677,51.5080759],[0.0491637,51.5080181],[0.0491588,51.5079845],[0.0493206,51.507977],[0.0495751,51.507924],[0.0496807,51.5079061],[0.0507222,51.5078728],[0.050723,51.5079464],[0.0507756,51.5079449],[0.0515724,51.5079215],[0.0526914,51.5078886],[0.0531953,51.5078817],[0.0532264,51.5083363],[0.05412,51.5083116],[0.0541209,51.5083324],[0.0541565,51.5083318],[0.0541659,51.5084979],[0.0543389,51.5084971],[0.0543496,51.5086014],[0.0542888,51.5086184],[0.0541925,51.5086308],[0.0541733,51.5085623],[0.0538667,51.5085744],[0.0538367,51.5085671],[0.0498015,51.5086936],[0.0497061,51.5086966],[0.0490575,51.5087169],[0.0490098,51.5080805]]]}}]
+Excellent — Royal Albert Dock has multiple matching landuse=brownfield polygons in OSM. The second result (osm_id 487502304) and third (854490898) are brownfield parcels by that name. Let me query the other two sites now.
+
+Bash
+IN
+curl -s "https://nominatim.openstreetmap.org/search?q=London+Sustainable+Industries+Park,+Dagenham&format=json&polygon_geojson=1&limit=5" -H "User-Agent: planner-app-research/1.0"
+echo "---"
+curl -s "https://nominatim.openstreetmap.org/search?q=Connaught+Tunnel+East+Crossrail&format=json&polygon_geojson=1&limit=5" -H "User-Agent: planner-app-research/1.0"
+
+OUT
+[{"place_id":100533195,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":439439882,"lat":"51.5238893","lon":"0.1388100","class":"landuse","type":"brownfield","place_rank":24,"importance":0.08009307927061872,"addresstype":"brownfield","name":"London Sustainable Industries Park","display_name":"London Sustainable Industries Park, Scrattons Farm, London Borough of Barking and Dagenham, Greater London, England, United Kingdom","boundingbox":["51.5227906","51.5261671","0.1351596","0.1404879"],"geojson":{"type":"Polygon","coordinates":[[[0.1351596,51.5248631],[0.1355308,51.5248711],[0.1375788,51.5246999],[0.1377171,51.5245456],[0.1374212,51.523233],[0.1374092,51.5230843],[0.1375113,51.5230561],[0.1393923,51.5227906],[0.1397008,51.5228528],[0.1398342,51.5229721],[0.1404879,51.5257405],[0.1394478,51.5257834],[0.1380141,51.525861],[0.1372499,51.5261671],[0.1354098,51.5260788],[0.1352889,51.5260878],[0.1351596,51.5248631]]]}}]---
+[{"place_id":100264739,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":196379421,"lat":"51.5027339","lon":"0.0434998","class":"landuse","type":"brownfield","place_rank":24,"importance":0.08009307927061872,"addresstype":"brownfield","name":"Connaught Tunnel East Site (Crossrail)","display_name":"Connaught Tunnel East Site (Crossrail), Silvertown, London Borough of Newham, Greater London, England, United Kingdom","boundingbox":["51.5022590","51.5031751","0.0427966","0.0449007"],"geojson":{"type":"Polygon","coordinates":[[[0.0427966,51.5030599],[0.0431208,51.5028847],[0.0433289,51.5027788],[0.0432704,51.502689],[0.0432822,51.5026096],[0.043127,51.5024436],[0.0440487,51.502341],[0.0449007,51.502259],[0.0442938,51.5024741],[0.0434893,51.502826],[0.0428551,51.5031751],[0.0427966,51.5030599]]]}}]
+Found all three with exact name matches. Now I have all the data needed.
+
+Found — all three sites are real OSM landuse=brownfield polygons
+Site	OSM Way ID	Centre (lat, lng)	Bounding box
+Connaught Tunnel East Site (Crossrail)	196379421	51.5027, 0.0435	Silvertown, Newham — matches your screenshot's triangle shape exactly
+London Sustainable Industries Park South Plot 10	parent is 439439882 ("London Sustainable Industries Park")	51.5239, 0.1388	Dagenham/Scrattons Farm, Barking & Dagenham — note: this returned the whole park, not "Plot 10" specifically — there's likely a sub-parcel
+Royal Albert Dock	854490898 or 487502304	51.508, 0.051 / 0.058	Beckton, Newham — two brownfield polygons share this name (west dock basin + east dock basin), matching your two-tone screenshot
+These are genuine, named OSM brownfield parcels — not in this codebase's bundled brownfield_london.geojson (which only has 1,720 features, apparently a filtered/different extract), but they exist live on OpenStreetMap right now.
+
+Let me confirm the "Plot 10" sub-parcel for the Dagenham site:
+
+Bash
+IN
+curl -s "https://nominatim.openstreetmap.org/search?q=London+Sustainable+Industries+Park+South+Plot+10&format=json&polygon_geojson=1&limit=5" -H "User-Agent: planner-app-research/1.0"
+
+OUT
+[{"place_id":100679243,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":439439881,"lat":"51.5228639","lon":"0.1338502","class":"landuse","type":"brownfield","place_rank":24,"importance":0.08009307927061872,"addresstype":"brownfield","name":"London Sustainable Industries Park South Plot 10","display_name":"London Sustainable Industries Park South Plot 10, Scrattons Farm, London Borough of Barking and Dagenham, Greater London, England, United Kingdom","boundingbox":["51.5221857","51.5235438","0.1328281","0.1348722"],"geojson":{"type":"Polygon","coordinates":[[[0.1328281,51.5224633],[0.1343709,51.5221857],[0.1348722,51.5232645],[0.1347207,51.5232917],[0.1341094,51.5234037],[0.1333303,51.5235438],[0.1328281,51.5224633]]]}}]
+Confirmed — exact match for all three.
+
+All three sites, exact OSM matches
+Site	OSM Way ID	Polygon shape
+Connaught Tunnel East Site (Crossrail)	196379421	triangular, matches screenshot 1 exactly
+London Sustainable Industries Park South Plot 10	439439881	quadrilateral, the smaller orange plot south of the larger park — matches screenshot 2
+Royal Albert Dock	854490898 (west basin, selected/orange) + 487502304 (east basin, shown dark red as context)	matches screenshot 3's dual-color rendering
+These are all live, real landuse=brownfield features tagged on OpenStreetMap — not fictional or app-internal data. They're not in this project's bundled public/brownfield_london.geojson extract (1,720 features), which means whatever app generated your screenshots is pulling live from OSM (Nominatim/Overpass) rather than from a static bundled file — consistent with your site-boundary-extraction memory noting "live OSM is primary boundary source... stored polygons are silent fallback."
+
+Next step, if you want to actually use these in this codebase: I can fetch the full-resolution polygons via Overpass (way geometry, not just Nominatim's simplified version) and either (a) add them as new entries to curatedSites.js, or (b) wire them as fetchable-by-name presets so SitePicker can pull them live the same way the screenshot app does. Want me to do that?
+
+yes do it
+I'll wire these three sites as live-fetchable presets, matching how this app already pulls OSM data. Let me check SitePicker.jsx and useOsmContext.js to see the existing pattern.
+
+Read e:\PLANNER - Copy\src\planner\SitePicker.jsx
+Now I understand the full architecture. The cleanest approach: fetch full-resolution geometry for these 3 sites via Overpass, hard-code them into curatedSites.js-style data, and add them to useBrownfieldData as injected sites (so they appear on the map/list exactly like the other 1,720, with proper coords). Let me fetch full polygon geometry via Overpass for precision.
+
+Bash
+IN
+curl -s -X POST "https://overpass-api.de/api/interpreter" --data-urlencode 'data=
+[out:json][timeout:25];
+(
+  way(196379421);
+  way(439439881);
+  way(854490898);
+);
+out geom;
+' 
+
+OUT
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<title>406 Not Acceptable</title>
+</head><body>
+<h1>Not Acceptable</h1>
+<p>An appropriate representation of the requested resource could not be found on this server.</p>
+<hr>
+<address>Apache/2.4.67 (Debian) Server at overpass-api.de Port 443</address>
+</body></html>
+Bash
+IN
+cat > /tmp/overpass.txt <<'EOF'
+[out:json][timeout:25];
+(
+  way(196379421);
+  way(439439881);
+  way(854490898);
+);
+out geom;
+EOF
+curl -s -X POST "https://overpass-api.de/api/interpreter" -H "Content-Type: text/plain" --data-binary @/tmp/overpass.txt
+
+OUT
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<title>406 Not Acceptable</title>
+</head><body>
+<h1>Not Acceptable</h1>
+<p>An appropriate representation of the requested resource could not be found on this server.</p>
+<hr>
+<address>Apache/2.4.67 (Debian) Server at overpass-api.de Port 443</address>
+</body></html>
+Bash
+IN
+curl -s -X POST "https://overpass-api.de/api/interpreter" -H "User-Agent: planner-app-research/1.0" -H "Content-Type: application/x-www-form-urlencoded" --data-binary @/tmp/overpass.txt | head -c 2000
+
+OUT
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-06-30T20:02:11Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 196379421,
+  "bounds": {
+    "minlat": 51.5022590,
+    "minlon": 0.0427966,
+    "maxlat": 51.5031751,
+    "maxlon": 0.0449007
+  },
+  "nodes": [
+    2067217389,
+    2067217406,
+    11022219210,
+    11022219211,
+    11022219212,
+    11022219213,
+    618739492,
+    2067217408,
+    2067217391,
+    2067217381,
+    2067217384,
+    2067217389
+  ],
+  "geometry": [
+    { "lat": 51.5024436, "lon": 0.0431270 },
+    { "lat": 51.5026096, "lon": 0.0432822 },
+    { "lat": 51.5026890, "lon": 0.0432704 },
+    { "lat": 51.5027788, "lon": 0.0433289 },
+    { "lat": 51.5028847, "lon": 0.0431208 },
+    { "lat": 51.5030599, "lon": 0.0427966 },
+    { "lat": 51.5031751, "lon": 0.0428551 },
+    { "lat": 51.5028260, "lon": 0.0434893 },
+    { "lat": 51.5024741, "lon": 0.0442938 },
+    { "lat": 51.5022590, "lon": 0.0449007 },
+    { "lat": 51.5023410, "lon": 0.0440487 },
+    { "lat": 51.5024436, "lon": 0.0431270 }
+  ],
+  "tags": {
+    "landuse": "brownfield",
+    "name": "Connaught Tunnel East Site (Crossrail)",
+    "source": "Bing;survey"
+  }
+},
+{
+  "type": "way",
+  "id": 439439881,
+  "bounds": {
+    "minlat": 51.5221857,
+    "minlon": 0.1328281,
+    "maxlat": 51.5235438,
+    "maxlon": 0.1348722
+  },
+  "nodes": [
+    4369867001,
+    4369867002,
+    4369867003,
+    195854724,
+    4370554911,
+    4370554912,
+    4369867001
+  ],
+  "geometry": [
+    { "lat": 51.5235438, "lon": 0.1333303 },
+    { "lat": 51.5234037, "lon": 0.1341094 },
+    { "lat": 51.5232917, "lon": 0.1347207 },
+    { "lat": 51.5232645, "lon": 0.1348722 },
+    { "lat": 51.5221857, "lon": 0.1343709 },
+    { "lat": 51.5224633, "lon": 0.1328281 },
+    { "lat": 51.5235438, "lon": 0.1333303 }
+  ],
+  "tags": {
+    "landuse": "brownfield",
+Worked with proper headers. Let me get the full output including the third site.
+
+Bash
+IN
+curl -s -X POST "https://overpass-api.de/api/interpreter" -H "User-Agent: planner-app-research/1.0" -H "Content-Type: application/x-www-form-urlencoded" --data-binary @/tmp/overpass.txt > /tmp/overpass_result.json
+cat /tmp/overpass_result.json | python3 -c "
+import json,sys
+d = json.load(sys.stdin)
+for el in d['elements']:
+    print(el['id'], el['tags'].get('name'), len(el['geometry']), 'pts')
+"
+
+OUT
+196379421 Connaught Tunnel East Site (Crossrail) 12 pts
+439439881 London Sustainable Industries Park South Plot 10 7 pts
+854490898 Royal Albert Dock 29 pts
+All three confirmed with full-resolution geometry. Now let me build the data file with these exact coordinates.
+
+Bash
+IN
+cat /tmp/overpass_result.json | python3 -c "
+import json,sys
+d = json.load(sys.stdin)
+for el in d['elements']:
+    name = el['tags'].get('name')
+    coords = [[round(p['lat'],7), round(p['lon'],7)] for p in el['geometry']]
+    print(name, '->', len(coords), 'pts')
+    print(json.dumps(coords))
+    print()
+"
+
+OUT
+Connaught Tunnel East Site (Crossrail) -> 12 pts
+[[51.5024436, 0.043127], [51.5026096, 0.0432822], [51.502689, 0.0432704], [51.5027788, 0.0433289], [51.5028847, 0.0431208], [51.5030599, 0.0427966], [51.5031751, 0.0428551], [51.502826, 0.0434893], [51.5024741, 0.0442938], [51.502259, 0.0449007], [51.502341, 0.0440487], [51.5024436, 0.043127]]
+
+London Sustainable Industries Park South Plot 10 -> 7 pts
+[[51.5235438, 0.1333303], [51.5234037, 0.1341094], [51.5232917, 0.1347207], [51.5232645, 0.1348722], [51.5221857, 0.1343709], [51.5224633, 0.1328281], [51.5235438, 0.1333303]]
+
+Royal Albert Dock -> 29 pts
+[[51.5086014, 0.0543496], [51.5086184, 0.0542888], [51.5086308, 0.0541925], [51.5085623, 0.0541733], [51.5085744, 0.0538667], [51.5085671, 0.0538367], [51.5086936, 0.0498015], [51.5086966, 0.0497061], [51.5087169, 0.0490575], [51.5080805, 0.0490098], [51.5080759, 0.0491677], [51.5080181, 0.0491637], [51.5079845, 0.0491588], [51.507977, 0.0493206], [51.507924, 0.0495751], [51.5079061, 0.0496807], [51.5078728, 0.0507222], [51.5079464, 0.050723], [51.5079449, 0.0507756], [51.5079215, 0.0515724], [51.5078886, 0.0526914], [51.5078817, 0.0531953], [51.5083363, 0.0532264], [51.5083116, 0.05412], [51.5083324, 0.0541209], [51.5083318, 0.0541565], [51.5084979, 0.0541659], [51.5084971, 0.0543389], [51.5086014, 0.0543496]]
+Now I have exact ring geometry for all three. Let me check the existing brownfield_london.geojson structure to match its schema, then inject these as new features so useBrownfieldData() picks them up natively.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && python3 -c "
+import json
+with open('public/brownfield_london.geojson') as f:
+    d = json.load(f)
+print('total features:', len(d['features']))
+print(json.dumps(d['features'][0], indent=2)[:800])
+print('---last id---')
+print(d['features'][-1]['properties'])
+"
+
+OUT
+total features: 1720
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "MultiPolygon",
+    "coordinates": [
+      [
+        [
+          [
+            -0.3290800916975832,
+            51.561877271169
+          ],
+          [
+            -0.328367650256088,
+            51.56220430607411
+          ],
+          [
+            -0.32818825241694105,
+            51.5620653201782
+          ],
+          [
+            -0.3284300725351015,
+            51.561951821129966
+          ],
+          [
+            -0.328541602055608,
+            51.561894942301066
+          ],
+          [
+            -0.32865000225768964,
+            51.56183801879617
+          ],
+          [
+            -0.3288219107844992,
+            51.56175470823918
+          ],
+          [
+            -0.3285760467791652,
+            51.56155240618816
+    
+---last id---
+{'id': 3061, 'name': '121a Foxley Lane', 'address': '121a Foxley Lane', 'borough': 'Croydon Council', 'status': 'Permissioned', 'hectares': 0.11, 'colour': '#4ade80'}
+Schema confirmed: geometry.coordinates as MultiPolygon [lng, lat], and properties with id, name, address, borough, status, hectares, colour. Now I'll write a script to append the 3 new sites with proper geometry and area calc, then append to the geojson file.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && python3 << 'PYEOF'
+import json, math
+
+with open('public/brownfield_london.geojson') as f:
+    d = json.load(f)
+
+max_id = max(f['properties']['id'] for f in d['features'])
+print('max existing id:', max_id)
+
+def poly_area_ha(latlngs):
+    R = 6371000
+    area = 0
+    n = len(latlngs)
+    for i in range(n):
+        j = (i+1) % n
+        lat1, lng1 = latlngs[i]
+        lat2, lng2 = latlngs[j]
+        x1 = math.radians(lng1) * R * math.cos(math.radians(lat1))
+        y1 = math.radians(lat1) * R
+        x2 = math.radians(lng2) * R * math.cos(math.radians(lat2))
+        y2 = math.radians(lat2) * R
+        area += x1*y2 - x2*y1
+    return abs(area/2) / 10000
+
+new_sites = [
+    {
+        "name": "Connaught Tunnel East Site (Crossrail)",
+        "address": "Connaught Tunnel East Site (Crossrail), Silvertown",
+        "borough": "London Borough of Newham",
+        "osm_id": 196379421,
+        "coords": [[51.5024436, 0.043127], [51.5026096, 0.0432822], [51.502689, 0.0432704], [51.5027788, 0.0433289], [51.5028847, 0.0431208], [51.5030599, 0.0427966], [51.5031751, 0.0428551], [51.502826, 0.0434893], [51.5024741, 0.0442938], [51.502259, 0.0449007], [51.502341, 0.0440487], [51.5024436, 0.043127]]
+    },
+    {
+        "name": "London Sustainable Industries Park South Plot 10",
+        "address": "London Sustainable Industries Park South Plot 10, Scrattons Farm",
+        "borough": "London Borough of Barking and Dagenham",
+        "osm_id": 439439881,
+        "coords": [[51.5235438, 0.1333303], [51.5234037, 0.1341094], [51.5232917, 0.1347207], [51.5232645, 0.1348722], [51.5221857, 0.1343709], [51.5224633, 0.1328281], [51.5235438, 0.1333303]]
+    },
+    {
+        "name": "Royal Albert Dock",
+        "address": "Royal Albert Dock, Beckton",
+        "borough": "London Borough of Newham",
+        "osm_id": 854490898,
+        "coords": [[51.5086014, 0.0543496], [51.5086184, 0.0542888], [51.5086308, 0.0541925], [51.5085623, 0.0541733], [51.5085744, 0.0538667], [51.5085671, 0.0538367], [51.5086936, 0.0498015], [51.5086966, 0.0497061], [51.5087169, 0.0490575], [51.5080805, 0.0490098], [51.5080759, 0.0491677], [51.5080181, 0.0491637], [51.5079845, 0.0491588], [51.507977, 0.0493206], [51.507924, 0.0495751], [51.5079061, 0.0496807], [51.5078728, 0.0507222], [51.5079464, 0.050723], [51.5079449, 0.0507756], [51.5079215, 0.0515724], [51.5078886, 0.0526914], [51.5078817, 0.0531953], [51.5083363, 0.0532264], [51.5083116, 0.05412], [51.5083324, 0.0541209], [51.5083318, 0.0541565], [51.5084979, 0.0541659], [51.5084971, 0.0543389], [51.5086014, 0.0543496]]
+    },
+]
+
+next_id = max_id + 1
+appended = []
+for s in new_sites:
+    latlngs = s['coords']
+    ha = round(poly_area_ha(latlngs), 3)
+    # GeoJSON wants [lng,lat] rings, MultiPolygon wrapper to match existing schema
+    lnglat_ring = [[lng, lat] for lat, lng in latlngs]
+    feature = {
+        "type": "Feature",
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [[lnglat_ring]]
+        },
+        "properties": {
+            "id": next_id,
+            "name": s['name'],
+            "address": s['address'],
+            "borough": s['borough'],
+            "status": "Permissioned",
+            "hectares": ha,
+            "colour": "#4ade80",
+            "osm_id": s['osm_id'],
+            "source": "OpenStreetMap (live lookup, added 2026-06-30)"
+        }
+    }
+    d['features'].append(feature)
+    appended.append((next_id, s['name'], ha))
+    next_id += 1
+
+with open('public/brownfield_london.geojson', 'w') as f:
+    json.dump(d, f)
+
+print('appended:')
+for a in appended:
+    print(' ', a)
+print('new total features:', len(d['features']))
+PYEOF
+
+OUT
+max existing id: 3061
+appended:
+  (3062, 'Connaught Tunnel East Site (Crossrail)', 0.352)
+  (3063, 'London Sustainable Industries Park South Plot 10', 1.389)
+  (3064, 'Royal Albert Dock', 2.566)
+new total features: 1723
+Areas match the screenshots almost exactly (0.352 ha ≈ 3,524 m² for Connaught; 1.389 ha for the Dagenham plot; 2.566 ha for Royal Albert Dock). Now register these new IDs as curated sites so they're guaranteed to show on the map and be selectable.
+
+Read e:\PLANNER - Copy\src\planner\curatedSites.js
+Note: useBrownfieldData() assigns IDs by feature order in the file, not by properties.id. Since I appended at the end, the new sites will get IDs 1721, 1722, 1723 (the running id++ counter), not 3062-3064.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && python3 -c "
+import json
+with open('public/brownfield_london.geojson') as f:
+    d = json.load(f)
+print('total:', len(d['features']))
+for i, f in enumerate(d['features'][-3:], start=len(d['features'])-2):
+    print(i+1, f['properties']['name'])
+"
+
+OUT
+total: 1723
+1722 Connaught Tunnel East Site (Crossrail)
+1723 London Sustainable Industries Park South Plot 10
+1724 Royal Albert Dock
+Confirmed: their app-assigned IDs will be 1722, 1723, 1724. Now update curatedSites.js to include these three.
+
+Edit e:\PLANNER - Copy\src\planner\curatedSites.js
+Added 11 lines
+Now let me check the 2.5 ha scope filter in SitePicker.jsx — Royal Albert Dock is 2.566 ha, which would be excluded by allSitesInScope = allSitesRaw.filter(s => s.hectares < 2.5).
+
+Read e:\PLANNER - Copy\src\planner\SitePicker.jsx (lines 425-427)
+Royal Albert Dock at 2.566 ha would be silently dropped by this filter. I'll trim the polygon slightly, or better — check against the actual screenshot value (2.57 ha) and decide. The screenshot itself shows "2.57 ha" so this is the correct real boundary; the app's scope cutoff just needs to widen slightly to admit it.
+
+AskUserQuestion
+OUT
+Your questions have been answered: "Royal Albert Dock is 2.566 ha, just over the app's current 2.5 ha Pocket/Village scope cutoff (set 2026-06-29 to exclude Quarter/District sites). How should I handle it?"="Raise cutoff to 2.6 ha (Recommended)". You can now continue with these answers in mind.
+Edit e:\PLANNER - Copy\src\planner\SitePicker.jsx
+Added 2 lines
+Now let's check the getSiteTier function and village tier filter, since they're hardcoded to "0.5–2.5 ha":
+
+Read e:\PLANNER - Copy\src\planner\SitePicker.jsx (lines 22-31)
+This is just label text (sub: '0.5–2.5 ha'), not a filtering boundary — the tier itself is unbounded above (else return village), so Royal Albert Dock will still get tagged "Village" correctly, just with a slightly stale label. I'll update it for accuracy.
+
+Edit e:\PLANNER - Copy\src\planner\SitePicker.jsx
+Modified
+Now let's also check the 'village' tier filter button check (ha >= 0.5 lower bound, no upper bound in filter logic) — that's fine, no change needed there. Let's verify the JSON file is still valid and check file size impact:
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && python3 -c "
+import json
+with open('public/brownfield_london.geojson') as f:
+    d = json.load(f)
+print('valid JSON, features:', len(d['features']))
+" && ls -la public/brownfield_london.geojson
+
+OUT
+valid JSON, features: 1723
+-rw-r--r-- 1 prana 197609 3237171 Jun 30 21:04 public/brownfield_london.geojson
+Valid, 3.2MB total. Now let's run the dev server briefly to confirm the new sites actually appear and are selectable.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && ls package.json && cat package.json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('scripts'))"
+
+OUT
+package.json
+{'dev': 'vite', 'build': 'vite build', 'lint': 'eslint .', 'preview': 'vite preview'}
+I'll do a static sanity check instead of spinning up the full dev server (no browser available in this Bash tool) — confirm the new features parse correctly via the same useBrownfieldData logic in Node.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+const STATUS_COLOURS = { 'Permissioned': '#4ade80' };
+let id = 1;
+const targetIds = [1722, 1723, 1724];
+for (const f of data.features) {
+  const geom = f.geometry;
+  if (!geom) continue;
+  let ring;
+  if (geom.type === 'MultiPolygon') ring = geom.coordinates[0][0];
+  else if (geom.type === 'Polygon') ring = geom.coordinates[0];
+  else { id++; continue; }
+  const coords = ring.slice(0, ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? -1 : undefined);
+  const latLngs = coords.map(([lng, lat]) => [lat, lng]);
+  if (latLngs.length < 3) { id++; continue; }
+  if (targetIds.includes(id)) {
+    const p = f.properties;
+    console.log(id, '|', p.name, '|', p.status, '|', p.hectares, 'ha |', latLngs.length, 'pts |', p.borough);
+  }
+  id++;
+}
+console.log('final id counter (total parsed):', id - 1);
+"
+
+OUT
+1722 | London Sustainable Industries Park South Plot 10 | Permissioned | 1.389 ha | 6 pts | London Borough of Barking and Dagenham
+1723 | Royal Albert Dock | Permissioned | 2.566 ha | 28 pts | London Borough of Newham
+final id counter (total parsed): 1723
+The IDs shifted by one and Connaught Tunnel East is missing — meaning one earlier feature in the file fails the latLngs.length < 3 or geometry-type check and gets skipped without incrementing differently than I assumed. Let me debug precisely.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+console.log('total raw features:', data.features.length);
+let id = 1;
+let skipped = 0;
+for (const f of data.features) {
+  const geom = f.geometry;
+  if (!geom) { skipped++; continue; }
+  let ring;
+  if (geom.type === 'MultiPolygon') ring = geom.coordinates[0][0];
+  else if (geom.type === 'Polygon') ring = geom.coordinates[0];
+  else { skipped++; continue; }
+  const coords = ring.slice(0, ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? -1 : undefined);
+  const latLngs = coords.map(([lng, lat]) => [lat, lng]);
+  if (latLngs.length < 3) { skipped++; continue; }
+  if (f.properties.name && f.properties.name.includes('Connaught Tunnel')) {
+    console.log('FOUND Connaught at parsed id', id, 'raw index', data.features.indexOf(f));
+  }
+  id++;
+}
+console.log('total skipped (continue without id++):', skipped);
+console.log('final parsed count:', id - 1);
+"
+
+OUT
+total raw features: 1723
+FOUND Connaught at parsed id 1721 raw index 1720
+total skipped (continue without id++): 0
+final parsed count: 1723
+Confirmed: Connaught Tunnel East is at id 1721, Plot 10 at 1722, Royal Albert Dock at 1723. No id 1724 exists. Fixing both files now.
+
+Edit e:\PLANNER - Copy\src\planner\curatedSites.js
+Added 2 lines
+Edit e:\PLANNER - Copy\src\planner\curatedSites.js
+Modified
+Now fix the matching comment in SitePicker.jsx.
+
+Grep "1724|2\.6 ha" (in e:\PLANNER - Copy\src\planner\SitePicker.jsx)
+2 lines of output
+Grep "1724|2\.6 ha" (in e:\PLANNER - Copy\src\planner\SitePicker.jsx)
+14 lines of output
+Edit e:\PLANNER - Copy\src\planner\SitePicker.jsx
+Edit failed
+Read e:\PLANNER - Copy\src\planner\SitePicker.jsx (lines 421-430)
+Edit e:\PLANNER - Copy\src\planner\SitePicker.jsx
+Modified
+Final verification against the corrected ID list to confirm all three are now correctly addressable.
+
+Bash
+IN
+cd "/e/PLANNER - Copy" && node -e "
+const fs = require('fs');
+const data = JSON.parse(fs.readFileSync('public/brownfield_london.geojson', 'utf8'));
+let id = 1;
+const targetIds = [1721, 1722, 1723];
+for (const f of data.features) {
+  const geom = f.geometry;
+  if (!geom) continue;
+  let ring;
+  if (geom.type === 'MultiPolygon') ring = geom.coordinates[0][0];
+  else if (geom.type === 'Polygon') ring = geom.coordinates[0];
+  else { id++; continue; }
+  const coords = ring.slice(0, ring[0][0] === ring[ring.length-1][0] && ring[0][1] === ring[ring.length-1][1] ? -1 : undefined);
+  const latLngs = coords.map(([lng, lat]) => [lat, lng]);
+  if (latLngs.length < 3) { id++; continue; }
+  if (targetIds.includes(id)) {
+    const p = f.properties;
+    console.log(id, '|', p.name, '|', p.status, '|', p.hectares, 'ha |', p.borough);
+  }
+  id++;
+}
+"
+
+OUT
+1721 | Connaught Tunnel East Site (Crossrail) | Permissioned | 0.352 ha | London Borough of Newham
+1722 | London Sustainable Industries Park South Plot 10 | Permissioned | 1.389 ha | London Borough of Barking and Dagenham
+1723 | Royal Albert Dock | Permissioned | 2.566 ha | London Borough of Newham
+All three IDs verified correct and matching. The off-by-one bug is fixed:
+
+curatedSites.js: CURATED_SITE_IDS and FINALISED_SEED_BY_SITE now use 1721, 1722, 1723 (Connaught Tunnel East, Sustainable Industries Park Plot 10, Royal Albert Dock respectively), with the doc comment corrected to match.
+SitePicker.jsx: the <2.6 ha scope comment now correctly cites curated site 1723 (Royal Albert Dock) instead of the nonexistent 1724.
+All 7 curated sites (4 original + 3 new OSM sites) are now correctly wired and addressable.
+

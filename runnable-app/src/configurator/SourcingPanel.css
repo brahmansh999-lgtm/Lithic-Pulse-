@@ -1,0 +1,104 @@
+.src-root {
+  position: absolute; inset: 0;
+  background: #0a0b0d; color: #e8e4da;
+  padding: 28px 40px 60px; overflow-y: auto;
+  font-family: var(--mono, 'DM Mono', monospace);
+}
+
+.src-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.src-eyebrow { font-size: 0.62rem; letter-spacing: 0.16em; text-transform: uppercase; color: #5ba3c9; margin-bottom: 6px; }
+.src-title { font-size: 1.35rem; font-family: 'DM Serif Display', serif; color: #f0ece2; }
+
+.src-summary { display: flex; gap: 18px; }
+.src-summary-item { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(232,228,218,0.45); }
+.src-summary-item span { font-size: 1.05rem; color: #f0ece2; font-family: 'DM Serif Display', serif; }
+
+.src-scope-toggle { display: flex; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; flex-shrink: 0; align-self: center; }
+.src-scope-btn {
+  padding: 8px 16px; font-size: 0.6rem; font-family: var(--mono, monospace);
+  letter-spacing: 0.08em; text-transform: uppercase; color: rgba(232,228,218,0.5);
+  background: transparent; border: none; cursor: pointer; transition: all 0.15s;
+}
+.src-scope-btn:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.12); }
+.src-scope-btn.active { background: #e8e4da; color: #0a0b0d; }
+.src-scope-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.src-section-label { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(232,228,218,0.5); margin: 18px 0 10px; }
+
+/* ── Gantt timeline ── */
+.src-gantt {
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  background: rgba(255,255,255,0.02); padding: 18px 20px 28px;
+  display: flex; flex-direction: column; gap: 10px; position: relative;
+}
+.src-gantt-row { display: flex; align-items: center; gap: 12px; }
+.src-gantt-label { width: 76px; flex-shrink: 0; font-size: 0.68rem; color: rgba(232,228,218,0.7); }
+.src-gantt-track { flex: 1; height: 22px; position: relative; background: rgba(255,255,255,0.03); border-radius: 4px; }
+.src-gantt-bar {
+  position: absolute; top: 0; bottom: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+  transition: left 0.3s, width 0.3s;
+}
+.src-gantt-bar-label { font-size: 0.56rem; color: #0a0b0d; font-weight: 700; }
+.src-gantt-week { width: 64px; flex-shrink: 0; text-align: right; font-size: 0.56rem; color: rgba(232,228,218,0.4); }
+
+.src-gantt-axis { position: relative; height: 14px; margin-left: 88px; margin-right: 76px; }
+.src-gantt-axis-tick { position: absolute; font-size: 0.5rem; color: rgba(232,228,218,0.3); transform: translateX(-50%); }
+
+.src-gantt-note { font-size: 0.6rem; line-height: 1.6; color: rgba(232,228,218,0.45); margin-bottom: 4px; }
+
+/* ── Material need chips ── */
+.src-needs-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.src-need-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+  font-size: 0.66rem; color: #e8e4da; background: rgba(255,255,255,0.02);
+}
+.src-need-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.src-need-mass { color: rgba(232,228,218,0.5); margin-left: 2px; }
+
+/* ── Supplier cards ── */
+.src-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.src-card {
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+  background: rgba(255,255,255,0.02); padding: 16px; display: flex; flex-direction: column;
+}
+.src-card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.src-card-name { font-size: 0.9rem; color: #f0ece2; font-weight: 600; }
+.src-card-region { font-size: 0.58rem; color: rgba(232,228,218,0.45); }
+.src-card-blurb { font-size: 0.64rem; line-height: 1.5; color: rgba(232,228,218,0.6); margin-bottom: 10px; }
+.src-card-covers { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.src-cover-tag { font-size: 0.54rem; padding: 3px 8px; border: 1px solid; border-radius: 4px; }
+
+.src-card-meta { display: flex; gap: 12px; margin-bottom: 12px; }
+.src-meta-item { display: flex; flex-direction: column; font-size: 0.48rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(232,228,218,0.4); }
+.src-meta-item span { font-size: 0.68rem; color: #e8e4da; text-transform: none; letter-spacing: 0; margin-bottom: 2px; }
+.src-lead-fastest { color: #8dab80 !important; }
+
+.src-quote-btn {
+  margin-top: auto; padding: 9px; border-radius: 8px; cursor: pointer;
+  background: #5ba3c9; border: none; color: #0a0b0d; font-weight: 600;
+  font-size: 0.64rem; font-family: var(--mono, monospace);
+}
+.src-quote-btn:hover { background: #6fb3d6; }
+.src-quote-btn--done { background: rgba(141,171,128,0.2); color: #8dab80; border: 1px solid rgba(141,171,128,0.4); cursor: default; }
+
+/* ── Truck chips ── */
+.src-truck-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.src-truck-chip {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+  padding: 7px 10px; background: rgba(255,255,255,0.02); min-width: 130px;
+}
+.src-truck-chip-num { font-size: 0.6rem; color: rgba(232,228,218,0.5); flex-shrink: 0; }
+.src-truck-chip-bar-track { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.src-truck-chip-bar { height: 100%; background: #8dab80; }
+.src-truck-chip-pct { font-size: 0.56rem; color: rgba(232,228,218,0.45); flex-shrink: 0; }
+
+.src-footer { margin-top: 26px; }
+.src-back-btn {
+  padding: 9px 18px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(232,228,218,0.7); font-size: 0.7rem; font-family: var(--mono, monospace);
+}
+.src-back-btn:hover { background: rgba(255,255,255,0.08); }

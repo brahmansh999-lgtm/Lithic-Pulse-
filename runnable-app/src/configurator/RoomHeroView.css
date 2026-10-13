@@ -1,0 +1,439 @@
+/* ── RoomHeroView — "View Your Home" ─────────────────────────────
+   The homeowner sees one finished rendered image of their home.
+   The 3D canvas only does the rendering work (hidden); the result
+   image(s) sit on top. Same Lithic Pulse glass tokens elsewhere. */
+
+.rhv-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #060608;
+  animation: rhvReveal 0.9s var(--ease-out, ease-out) both;
+}
+@keyframes rhvReveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Hidden render stage — present so WebGL keeps running, but behind the
+   overlay and non-interactive. Locked to a true 16:9 landscape box so the
+   captured screenshot (and therefore the AI render) is always a consistent
+   landscape frame, regardless of the browser window's actual aspect ratio —
+   without this, the camera's FOV/framing math gets fed a canvas of whatever
+   shape the window happens to be, silently distorting every shot. */
+.rhv-stage {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1280px;
+  height: 720px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.rhv-canvas { width: 1280px !important; height: 720px !important; display: block; }
+
+/* While the user is manually placing the camera, the stage becomes the
+   actual visible/interactive view (drag to orbit, scroll to zoom) instead
+   of a hidden capture target. */
+.rhv-stage--live {
+  opacity: 1;
+  pointer-events: auto;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100vw - 2.4rem);
+  max-height: calc(100vh - 2.4rem);
+  width: min(1280px, calc(100vw - 2.4rem));
+  height: min(720px, calc((100vw - 2.4rem) * 9 / 16));
+  cursor: grab;
+}
+.rhv-stage--live .rhv-canvas { width: 100% !important; height: 100% !important; }
+.rhv-stage--live:active { cursor: grabbing; }
+
+.rhv-place-overlay {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+.rhv-place-hint {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: rgba(237,233,224,0.7);
+  background: rgba(5,5,4,0.78);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  padding: 0.5rem 0.9rem;
+  text-align: center;
+}
+.rhv-place-btn { padding: 0.75rem 1.4rem; }
+
+/* Live "what the camera sees" thumbnail — its own small Canvas, shown while
+   placing the camera marker in the dollhouse view. */
+.rhv-preview-thumb {
+  position: absolute;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  z-index: 6;
+  width: 260px;
+  height: 146px;
+  border: 1px solid var(--line);
+  background: #000;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.rhv-preview-thumb-label {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 1;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(237,233,224,0.75);
+  background: rgba(5,5,4,0.7);
+  padding: 0.25rem 0.5rem;
+}
+.rhv-preview-thumb-canvas { width: 100% !important; height: 100% !important; display: block; }
+
+.rhv-eyebrow {
+  position: absolute;
+  top: 1rem;
+  left: 1.2rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.55rem 0.85rem;
+  background: rgba(5,5,4,0.88);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+.rhv-eyebrow-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.rhv-eyebrow-unit {
+  font-size: 1.05rem;
+  font-style: italic;
+  letter-spacing: -0.02em;
+}
+
+/* ── Result overlay ── */
+.rhv-shot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* justify-content: center clips the top (the rendered image) off-screen
+     whenever the stacked content (image + actions + an open Render Controls
+     panel) is taller than the viewport, since a centered flex column with no
+     scroll just overflows both ways equally. Top-aligned + scrollable means
+     the image is always the first thing visible, and a tall controls panel
+     scrolls instead of pushing the image out of view. */
+  justify-content: flex-start;
+  overflow-y: auto;
+  gap: 1rem;
+  padding: 2rem;
+}
+/* During live placement this overlay renders no content, but being
+   position:absolute/inset:0 it still sits on top of the draggable 3D stage
+   and silently ate every drag/scroll event meant for OrbitControls — that's
+   why placement looked frozen. */
+.rhv-shot-overlay--inert { pointer-events: none; }
+
+.rhv-shot-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+.rhv-shot-loading-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+.rhv-shot-loading-sub {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  opacity: 0.45;
+}
+
+.rhv-shot-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 560px;
+  text-align: center;
+}
+.rhv-shot-error-title { font-size: 0.95rem; font-weight: 600; }
+.rhv-shot-error-msg {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  color: #ffb3b3;
+  word-break: break-word;
+  line-height: 1.4;
+}
+.rhv-shot-img--raw { max-height: 42vh; opacity: 0.85; }
+
+.rhv-shot-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.rhv-shot-img {
+  max-width: 86vw;
+  max-height: 64vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+}
+
+.rhv-shot-thumbs {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.rhv-shot-thumb {
+  position: relative;
+  width: 120px;
+  height: 80px;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #000;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.rhv-shot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rhv-shot-thumb span {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem;
+  background: rgba(0,0,0,0.6);
+  color: rgba(237,233,224,0.8);
+}
+.rhv-shot-thumb:hover { border-color: rgba(255,255,255,0.4); }
+.rhv-shot-thumb.active { border-color: var(--accent, #e8e4da); }
+
+.rhv-shot-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ── Buttons (shared look) ── */
+.rhv-render-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(5,5,4,0.88);
+  border: 1px solid var(--line);
+  color: #ede9e0;
+  backdrop-filter: blur(12px);
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.13s;
+}
+.rhv-render-btn:hover { background: rgba(255,255,255,0.08); }
+
+.rhv-ai-enhance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(167,139,250,0.12);
+  border: 1px solid rgba(167,139,250,0.4);
+  color: #cdbdfa;
+  backdrop-filter: blur(12px);
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.13s;
+}
+.rhv-ai-enhance-btn:hover { background: rgba(167,139,250,0.2); }
+
+.rhv-next-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--accent, #e8e4da);
+  color: #060605;
+  border: none;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rhv-next-btn:hover { opacity: 0.9; }
+
+/* ── Spinner ── */
+.rhv-ai-spinner {
+  width: 30px; height: 30px;
+  border: 2px solid rgba(216,208,255,0.25);
+  border-top-color: #d8d0ff;
+  border-radius: 50%;
+  animation: rhvSpin 0.8s linear infinite;
+}
+@keyframes rhvSpin { to { transform: rotate(360deg); } }
+
+/* ── Camera nudge controls (View Your Home) ── */
+.rhv-cam-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+.rhv-cam-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-right: 0.2rem;
+}
+.rhv-cam-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--line);
+  color: #ede9e0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.13s;
+}
+.rhv-cam-btn:hover { background: rgba(255,255,255,0.12); }
+.rhv-cam-btn--reset {
+  width: auto;
+  padding: 0 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  color: #f0a0a0;
+  border-color: rgba(240,160,160,0.3);
+}
+
+/* ── Render Controls panel ─────────────────────────────────────────────── */
+.rhv-render-btn--active { background: rgba(255,209,102,0.18); border-color: rgba(255,209,102,0.5); color: #ffd166; }
+
+.rhv-rc {
+  margin: 14px auto 0;
+  max-width: 540px;
+  width: 92%;
+  background: rgba(18,18,22,0.92);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px 18px;
+  text-align: left;
+  backdrop-filter: blur(8px);
+  max-height: 62vh;
+  overflow-y: auto;
+}
+.rhv-rc-title {
+  font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: #ffd166; margin-bottom: 12px; font-weight: 600;
+}
+.rhv-rc-group { margin-bottom: 14px; }
+.rhv-rc-group--dim { opacity: 0.5; }
+.rhv-rc-label {
+  display: block; font-size: 0.7rem; letter-spacing: 0.03em;
+  color: #cfcfd6; margin-bottom: 6px;
+}
+.rhv-rc-val { color: #ffd166; font-weight: 600; }
+
+.rhv-rc-engines { display: flex; flex-wrap: wrap; gap: 6px; }
+.rhv-rc-engine {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 6px 9px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  color: #ddd; min-width: 0;
+}
+.rhv-rc-engine:hover { background: rgba(255,255,255,0.08); }
+.rhv-rc-engine--on { background: rgba(255,209,102,0.16); border-color: rgba(255,209,102,0.55); }
+.rhv-rc-engine-name { font-size: 0.72rem; font-weight: 600; }
+.rhv-rc-engine-hint { font-size: 0.58rem; color: #999; margin-top: 1px; }
+.rhv-rc-engine--on .rhv-rc-engine-name { color: #ffd166; }
+
+.rhv-rc-refs { display: flex; flex-wrap: wrap; gap: 8px; }
+.rhv-rc-ref {
+  width: 84px; height: 48px; border-radius: 6px; overflow: hidden;
+  padding: 0; cursor: pointer; background: #111;
+  border: 2px solid rgba(255,255,255,0.12);
+}
+.rhv-rc-ref img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rhv-rc-ref--on { border-color: #ffd166; box-shadow: 0 0 0 1px #ffd166; }
+.rhv-rc-ref-noimg { font-size: 0.55rem; color: #aaa; padding: 4px; display: block; }
+.rhv-rc-empty { font-size: 0.7rem; color: #888; }
+
+.rhv-rc-slider { width: 100%; accent-color: #ffd166; cursor: pointer; }
+.rhv-rc-scale {
+  display: flex; justify-content: space-between;
+  font-size: 0.58rem; color: #888; margin-top: 2px;
+}
+
+.rhv-rc-prompt {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; color: #e6e6ea; font-size: 0.7rem; line-height: 1.45;
+  padding: 8px 10px; font-family: inherit;
+}
+.rhv-rc-prompt:focus { outline: none; border-color: rgba(255,209,102,0.5); }
+.rhv-rc-reset {
+  margin-top: 6px; font-size: 0.62rem; color: #9aa; background: none;
+  border: none; cursor: pointer; text-decoration: underline; padding: 0;
+}
+
+.rhv-rc-render {
+  width: 100%; margin-top: 6px; padding: 9px;
+  background: #ffd166; color: #1a1a1a; border: none; border-radius: 8px;
+  font-weight: 600; font-size: 0.78rem; cursor: pointer;
+}
+.rhv-rc-render:hover { background: #ffdb85; }
+
+/* ── Render Controls: advanced params ──────────────────────────────────── */
+.rhv-rc-prompt--sm { font-size: 0.66rem; }
+.rhv-rc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
+.rhv-rc-check { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: #cfcfd6; cursor: pointer; }
+.rhv-rc-check input { accent-color: #ffd166; cursor: pointer; }
+.rhv-rc-num {
+  width: 130px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px; color: #e6e6ea; font-size: 0.7rem; padding: 5px 8px; font-family: inherit;
+}
+.rhv-rc-num:disabled { opacity: 0.45; cursor: not-allowed; }
+.rhv-rc-num:focus { outline: none; border-color: rgba(255,209,102,0.5); }
+.rhv-rc-note { font-size: 0.58rem; color: #888; margin-top: 3px; }
+.rhv-rc-note-inline { font-size: 0.58rem; color: #888; font-weight: 400; }
+
+.rhv-rc-fmt { display: flex; gap: 6px; }
+.rhv-rc-fmt-btn {
+  padding: 5px 12px; border-radius: 7px; cursor: pointer; font-size: 0.66rem; font-weight: 600;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ddd;
+}
+.rhv-rc-fmt-btn:hover { background: rgba(255,255,255,0.08); }
+.rhv-rc-fmt-btn--on { background: rgba(255,209,102,0.16); border-color: rgba(255,209,102,0.55); color: #ffd166; }

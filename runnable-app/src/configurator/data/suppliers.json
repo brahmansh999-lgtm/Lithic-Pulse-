@@ -1,0 +1,125 @@
+{
+  "_note": "Indicative UK supplier directory for the low-carbon material palette. Each supplier lists the material classes it can provide so the BOM can be matched to real sources for quotation.",
+  "suppliers": [
+    {
+      "id": "SUP_CASTSTONE_01",
+      "name": "Haddonstone",
+      "region": "Northamptonshire",
+      "lat": 52.31, "lng": -1.05,
+      "materials": ["castStone"],
+      "leadWeeks": 6,
+      "minOrder": "Project tender",
+      "cert": "BS 1217 cast stone",
+      "site": "haddonstone.com",
+      "blurb": "UK's leading architectural cast stone manufacturer — columns, capitals, balustrades, facade panels."
+    },
+    {
+      "id": "SUP_CASTSTONE_02",
+      "name": "Procter Cast Stone",
+      "region": "West Yorkshire",
+      "lat": 53.72, "lng": -1.86,
+      "materials": ["castStone"],
+      "leadWeeks": 5,
+      "minOrder": "1 pallet",
+      "cert": "UKCSA member",
+      "site": "proctercaststone.co.uk",
+      "blurb": "Bespoke reconstructed-stone cast units, marble-dust mixes, bush-hammered and honed finishes."
+    },
+    {
+      "id": "SUP_GGBS_01",
+      "name": "Hanson / Regen GGBS",
+      "region": "Scunthorpe",
+      "lat": 53.59, "lng": -0.65,
+      "materials": ["ggbs", "geopolymer"],
+      "leadWeeks": 2,
+      "minOrder": "Bulk tanker",
+      "cert": "BS EN 15167",
+      "site": "hanson.co.uk",
+      "blurb": "Ground granulated blast-furnace slag (GGBS) — the low-carbon binder for cast stone and geopolymer mixes."
+    },
+    {
+      "id": "SUP_MARBLE_01",
+      "name": "Salisbury Stone & Aggregates",
+      "region": "Salisbury",
+      "lat": 51.07, "lng": -1.79,
+      "materials": ["marbleDust"],
+      "leadWeeks": 3,
+      "minOrder": "Bulk bag / tanker",
+      "cert": "BS EN 12620",
+      "site": "salisburystone.co.uk",
+      "blurb": "Fine-milled marble dust filler for the cast-stone substrate mix — a calcium-carbonate by-product of dimension-stone sawing."
+    },
+    {
+      "id": "SUP_CEMENT_01",
+      "name": "Hanson Cement",
+      "region": "Ribblesdale",
+      "lat": 53.93, "lng": -2.38,
+      "materials": ["portlandCement"],
+      "leadWeeks": 2,
+      "minOrder": "Bulk tanker",
+      "cert": "BS EN 197-1 CEM I",
+      "site": "hanson.co.uk",
+      "blurb": "Portland cement (CEM I) — the primary hydraulic binder topping up the GGBS/marble-dust substrate mix."
+    },
+    {
+      "id": "SUP_GEO_01",
+      "name": "Winn & Coales (Geopolymer)",
+      "region": "London",
+      "lat": 51.46, "lng": -0.08,
+      "materials": ["geopolymer"],
+      "leadWeeks": 4,
+      "minOrder": "Batch order",
+      "cert": "Alkali-activated, third-party tested",
+      "site": "denso.net",
+      "blurb": "Alkali-activated fly-ash / slag geopolymer binders for cores, slabs and foundation pads."
+    },
+    {
+      "id": "SUP_GLASS_01",
+      "name": "Pilkington UK",
+      "region": "St Helens",
+      "lat": 53.45, "lng": -2.73,
+      "materials": ["glass"],
+      "leadWeeks": 4,
+      "minOrder": "Per schedule",
+      "cert": "BS EN 1279 IGU",
+      "site": "pilkington.com",
+      "blurb": "Double / triple glazed units and electrochromic smart glass for the window schedule."
+    },
+    {
+      "id": "SUP_GLASS_02",
+      "name": "Saint-Gobain Glass",
+      "region": "Eggborough",
+      "lat": 53.70, "lng": -1.13,
+      "materials": ["glass"],
+      "leadWeeks": 5,
+      "minOrder": "Per schedule",
+      "cert": "Cradle-to-Cradle",
+      "site": "saint-gobain.co.uk",
+      "blurb": "Low-carbon flat glass and sealed insulating glass units with EPD documentation."
+    },
+    {
+      "id": "SUP_GRP_01",
+      "name": "Pipex / GRP Solutions",
+      "region": "Plymouth",
+      "lat": 50.38, "lng": -4.14,
+      "materials": ["grp"],
+      "leadWeeks": 7,
+      "minOrder": "Per pod",
+      "cert": "BS EN 13706",
+      "site": "pipexstructural.com",
+      "blurb": "Prefabricated GRP wet-zone pods and bathroom modules with cast-in services."
+    },
+    {
+      "id": "SUP_BASALT_01",
+      "name": "Mateenbar UK",
+      "region": "Manchester",
+      "lat": 53.48, "lng": -2.24,
+      "materials": ["castStone", "geopolymer"],
+      "leadWeeks": 3,
+      "minOrder": "Per coil",
+      "cert": "Basalt FRP rebar, ISO 10406",
+      "site": "mateenbar.com",
+      "blurb": "Non-corroding basalt-fibre reinforcement bar and mesh for every cast-stone pour."
+    }
+  ]
+}

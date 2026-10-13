@@ -1,0 +1,106 @@
+﻿.src-root {
+  position: absolute; inset: 0;
+  background: var(--bg); color: var(--fg);
+  padding: 28px 40px 60px; overflow-y: auto;
+  font-family: var(--sans);
+}
+
+.src-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.src-eyebrow { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.src-title { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.01em; font-family: var(--sans); color: var(--fg); }
+
+.src-summary { display: flex; gap: 18px; }
+.src-summary-item { display: flex; flex-direction: column; align-items: flex-end; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-dimmer); }
+.src-summary-item span { font-size: 1.05rem; font-weight: 600; color: var(--fg); font-family: var(--sans); }
+
+.src-scope-toggle { display: flex; border: 1px solid var(--line); border-radius: var(--radius-pill); overflow: hidden; flex-shrink: 0; align-self: center; }
+.src-scope-btn {
+  padding: 8px 16px; font-size: 12px; font-family: var(--sans);
+  letter-spacing: 0; color: var(--fg-dim);
+  background: transparent; border: none; cursor: pointer; transition: all 0.2s var(--ease-out);
+}
+.src-scope-btn:not(:last-child) { border-right: 1px solid var(--line); }
+.src-scope-btn.active { background: var(--accent); color: #fff; }
+.src-scope-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.src-section-label { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; color: var(--fg-dim); margin: 18px 0 10px; }
+
+/* â”€â”€ Gantt timeline â”€â”€ */
+.src-gantt {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-2); padding: 18px 20px 28px;
+  display: flex; flex-direction: column; gap: 10px; position: relative;
+}
+.src-gantt-row { display: flex; align-items: center; gap: 12px; }
+.src-gantt-label { width: 76px; flex-shrink: 0; font-size: 12px; color: var(--fg-dim); }
+.src-gantt-track { flex: 1; height: 22px; position: relative; background: var(--bg-3); border-radius: 4px; }
+.src-gantt-bar {
+  position: absolute; top: 0; bottom: 0; border-radius: 4px;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+  transition: left 0.3s var(--ease-out), width 0.3s var(--ease-out);
+}
+.src-gantt-bar-label { font-size: 10px; color: #fff; font-weight: 600; }
+.src-gantt-week { width: 64px; flex-shrink: 0; text-align: right; font-size: 10px; color: var(--fg-dimmer); }
+
+.src-gantt-axis { position: relative; height: 14px; margin-left: 88px; margin-right: 76px; }
+.src-gantt-axis-tick { position: absolute; font-size: 9px; color: var(--fg-dimmer); transform: translateX(-50%); }
+
+.src-gantt-note { font-size: 11px; line-height: 1.6; color: var(--fg-dimmer); margin-bottom: 4px; }
+
+/* â”€â”€ Material need chips â”€â”€ */
+.src-needs-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.src-need-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--radius-pill);
+  font-size: 12px; color: var(--fg); background: var(--bg-2);
+}
+.src-need-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.src-need-mass { color: var(--fg-dimmer); margin-left: 2px; }
+
+/* â”€â”€ Supplier cards â”€â”€ */
+.src-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.src-card {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg-2); padding: 16px; display: flex; flex-direction: column;
+}
+.src-card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.src-card-name { font-size: 0.9rem; color: var(--fg); font-weight: 600; }
+.src-card-region { font-size: 10.5px; color: var(--fg-dimmer); }
+.src-card-blurb { font-size: 12px; line-height: 1.5; color: var(--fg-dim); margin-bottom: 10px; }
+.src-card-covers { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+.src-cover-tag { font-size: 10px; padding: 3px 8px; border: 1px solid; border-radius: var(--radius-pill); }
+
+.src-card-meta { display: flex; gap: 12px; margin-bottom: 12px; }
+.src-meta-item { display: flex; flex-direction: column; font-size: 9.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-dimmer); }
+.src-meta-item span { font-size: 12.5px; color: var(--fg); text-transform: none; letter-spacing: 0; margin-bottom: 2px; font-weight: 500; }
+.src-lead-fastest { color: var(--green) !important; }
+
+.src-quote-btn {
+  margin-top: auto; padding: 9px; border-radius: var(--radius-pill); cursor: pointer;
+  background: var(--accent); border: none; color: #fff; font-weight: 500;
+  font-size: 12.5px; font-family: var(--sans);
+  transition: background 0.2s var(--ease-out);
+}
+.src-quote-btn:hover { background: var(--accent-hover); }
+.src-quote-btn--done { background: rgba(63,143,87,0.12); color: var(--green); border: 1px solid rgba(63,143,87,0.35); cursor: default; }
+
+/* â”€â”€ Truck chips â”€â”€ */
+.src-truck-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.src-truck-chip {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 7px 10px; background: var(--bg-2); min-width: 130px;
+}
+.src-truck-chip-num { font-size: 11px; color: var(--fg-dim); flex-shrink: 0; }
+.src-truck-chip-bar-track { flex: 1; height: 5px; background: var(--bg-4); border-radius: 3px; overflow: hidden; }
+.src-truck-chip-bar { height: 100%; background: var(--green); }
+.src-truck-chip-pct { font-size: 10.5px; color: var(--fg-dimmer); flex-shrink: 0; }
+
+.src-footer { margin-top: 26px; }
+.src-back-btn {
+  padding: 9px 18px; border-radius: var(--radius-pill); cursor: pointer;
+  background: transparent; border: 1px solid var(--line-b);
+  color: var(--fg-dim); font-size: 13px; font-family: var(--sans);
+  transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+.src-back-btn:hover { background: var(--bg-3); color: var(--fg); }

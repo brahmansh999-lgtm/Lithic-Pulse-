@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(design-sync)",
+      "Skill(design-sync:*)",
+      "Bash(npm install *)",
+      "Bash(node scripts/optimize-glbs.mjs)",
+      "Bash(python3)",
+      "Bash(node --check server/aiRenderMiddleware.js)",
+      "Bash(sleep 2 && tail -15 /tmp/vite-dev.log)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "projectID": "LITHIC_PULSE_RCX",
+  "projectName": "Lithic Pulse Assembly Engine",
+  "masterMouldsCount": 8,
+  "substrateRecipe": {
+    "marbleDust": 0.5432,
+    "ggbs": 0.2171,
+    "water": 0.1803,
+    "portlandCement": 0.0540,
+    "basaltFibers": 0.0027,
+    "superplasticizer": 0.0027
+  },
+  "components": {
+    "COL_Q": {
+      "name": "Column Quarter Shell",
+      "mouldID": "MOULD_COL_01",
+      "weightKg": 210,
+      "assemblyUnit": "4 pieces per column node",
+      "material": "Formative Low-Carbon Cast Stone"
+    },
+    "VLT_FRAG": {
+      "name": "Ribbed Vault Fragment",
+      "mouldID": "MOULD_VLT_03",
+      "weightKg": 145,
+      "assemblyUnit": "2 or 4 pieces per ceiling arch",
+      "material": "Formative Low-Carbon Cast Stone"
+    },
+    "CORE_MONO": {
+      "name": "Precast Geopolymer Service Core",
+      "mouldID": "MOULD_CORE_MAIN",
+      "weightKg": 4200,
+      "assemblyUnit": "1 per plumbing stack",
+      "material": "Heavy Geopolymer Binder"
+    },
+    "PANEL_SOLID": {
+      "name": "Solid Enclosure Panel",
+      "mouldID": "MOULD_PAN_01",
+      "weightKg": 320,
+      "assemblyUnit": "1 per wall section",
+      "material": "Formative Low-Carbon Cast Stone"
+    },
+    "PANEL_WINDOW": {
+      "name": "Window Punch Panel",
+      "mouldID": "MOULD_PAN_02",
+      "weightKg": 280,
+      "assemblyUnit": "1 per window opening",
+      "material": "Formative Low-Carbon Cast Stone"
+    },
+    "PANEL_DOOR": {
+      "name": "Balcony Door Entry Panel",
+      "mouldID": "MOULD_PAN_03",
+      "weightKg": 260,
+      "assemblyUnit": "1 per balcony entry",
+      "material": "Formative Low-Carbon Cast Stone"
+    },
+    "SLAB_DECK": {
+      "name": "Geopolymer Floor Slab",
+      "mouldID": "MOULD_SLAB_01",
+      "weightKg": 1800,
+      "assemblyUnit": "1 per deck segment",
+      "material": "Heavy Geopolymer Binder"
+    },
+    "FOUNDATION_PAD": {
+      "name": "Base Anchor Pad",
+      "mouldID": "MOULD_FND_01",
+      "weightKg": 2500,
+      "assemblyUnit": "1 per structural foundation node",
+      "material": "Heavy Geopolymer Binder"
+    }
+  },
+  "templates": {
+    "1-BHK": {
+      "name": "1-BHK (Student/Professional)",
+      "description": "Compact, highly insulated single-person unit with structural walls and tight column spacing.",
+      "partCounts": {
+        "COL_Q": 24,
+        "VLT_FRAG": 12,
+        "CORE_MONO": 1,
+        "PANEL_SOLID": 8,
+        "PANEL_WINDOW": 4,
+        "PANEL_DOOR": 2,
+        "SLAB_DECK": 4,
+        "FOUNDATION_PAD": 6
+      }
+    },
+    "2-BHK": {
+      "name": "2-BHK (Starter Family Unit)",
+      "description": "Medium-sized dual bedroom configuration balancing common areas and private rooms.",
+      "partCounts": {
+        "COL_Q": 48,
+        "VLT_FRAG": 24,
+        "CORE_MONO": 2,
+        "PANEL_SOLID": 14,
+        "PANEL_WINDOW": 8,
+        "PANEL_DOOR": 4,
+        "SLAB_DECK": 8,
+        "FOUNDATION_PAD": 12
+      }
+    },
+    "3-BHK": {
+      "name": "3-BHK (Large Family Unit)",
+      "description": "Open-plan, column-free living zones maximizing daylight exposure with wider ribbed vault spans.",
+      "partCounts": {
+        "COL_Q": 72,
+        "VLT_FRAG": 36,
+        "CORE_MONO": 3,
+        "PANEL_SOLID": 20,
+        "PANEL_WINDOW": 12,
+        "PANEL_DOOR": 6,
+        "SLAB_DECK": 12,
+        "FOUNDATION_PAD": 18
+      }
+    },
+    "Community Cluster": {
+      "name": "Stepped Terrace Community Cluster",
+      "description": "Stepped massing configuration. Columns shift inward on upper floors, leaving lower vaults exposed as pocket gardens.",
+      "partCounts": {
+        "COL_Q": 288,
+        "VLT_FRAG": 144,
+        "CORE_MONO": 12,
+        "PANEL_SOLID": 80,
+        "PANEL_WINDOW": 48,
+        "PANEL_DOOR": 24,
+        "SLAB_DECK": 48,
+        "FOUNDATION_PAD": 72
+      }
+    }
+  }
+}

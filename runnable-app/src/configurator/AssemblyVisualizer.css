@@ -1,0 +1,305 @@
+/* ── AssemblyVisualizer — Lithic Pulse design system ─────────────── */
+
+.asm-layout { display: flex; height: 100%; overflow: hidden; }
+.asm-main { flex: 1; position: relative; overflow: hidden; }
+
+.asm-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+/* ── Phase label — top left ── */
+.asm-phase-label {
+  position: absolute;
+  top: 80px;
+  left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(5,5,4,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  padding: 16px 22px 18px;
+  pointer-events: none;
+  min-width: 200px;
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+.asm-ph-num {
+  font-family: var(--mono);
+  font-size: 7px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+}
+
+.asm-ph-name {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--fg);
+  letter-spacing: -0.3px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.asm-ph-sub {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--fg-dim);
+  line-height: 1.5;
+  margin-top: 2px;
+  max-width: 200px;
+}
+
+.asm-ph-bar { height: 2px; background: var(--line-b); margin-top: 10px; overflow: hidden; }
+.asm-ph-bar-fill { height: 100%; transition: width 0.6s var(--ease-out); opacity: 0.8; }
+
+/* ── Layer toggle panel — right side ── */
+.asm-layers-panel {
+  position: absolute;
+  top: 80px;
+  right: 28px;
+  width: 168px;
+  background: rgba(5,5,4,0.88);
+  border: 1px solid var(--line);
+  padding: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+
+.asm-layers-title {
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.asm-layer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.2s;
+  text-align: left;
+  width: 100%;
+}
+.asm-layer-btn:hover:not(:disabled) { background: var(--bg-3); color: var(--fg); }
+.asm-layer-btn.hidden { opacity: 0.32; }
+.asm-layer-btn.hidden:hover:not(:disabled) { opacity: 0.65; }
+.asm-layer-btn.not-yet { opacity: 0.2; cursor: default; }
+
+.asm-layer-dot { width: 8px; height: 8px; border-radius: 0; flex-shrink: 0; }
+.asm-layer-name { flex: 1; }
+.asm-layer-eye { font-family: var(--mono); font-size: 8px; color: var(--fg-dimmer); opacity: 0.6; }
+.asm-layer-btn:not(.hidden) .asm-layer-eye { color: var(--accent); opacity: 0.8; }
+
+.asm-layers-reset {
+  margin-top: 6px;
+  padding: 5px 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  opacity: 0.7;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  width: 100%;
+}
+.asm-layers-reset:hover { opacity: 1; background: var(--accent-dim); }
+
+/* ── Start hint ── */
+.asm-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: rgba(5,5,4,0.92);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--line);
+  padding: 28px 36px;
+  pointer-events: none;
+  animation: fadeIn 0.5s var(--ease-out) both;
+}
+
+.asm-hint-icon {
+  width: 44px; height: 44px;
+  border-radius: 0;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Live "assembling" indicator — replaces the old press-play prompt */
+.asm-hint-icon-live {
+  position: relative;
+  animation: none;
+  background: transparent;
+  border-color: var(--accent-border);
+}
+.asm-hint-icon-live::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 2px solid var(--accent-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.asm-hint-text { font-family: var(--sans); font-size: 12px; color: var(--fg-dim); text-align: center; line-height: 1.6; }
+
+/* ── Timeline dock ── */
+.asm-timeline {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 84px;
+  background: linear-gradient(to top, rgba(5,5,4,0.98), rgba(5,5,4,0.88));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 28px;
+}
+
+/* Controls */
+.asm-tl-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.asm-tl-btn {
+  width: 34px; height: 34px;
+  border-radius: 0;
+  border: 1px solid var(--line-b);
+  background: var(--bg-3);
+  color: var(--fg-dim);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.asm-tl-btn:hover:not(:disabled) { background: var(--bg-4); color: var(--fg); border-color: var(--line-b); }
+.asm-tl-btn:disabled { opacity: 0.25; cursor: default; }
+
+.asm-tl-play {
+  width: 42px; height: 42px;
+  border-radius: 0;
+  background: var(--accent);
+  border: none;
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.2s var(--ease-spring);
+}
+.asm-tl-play:hover { opacity: 0.9; transform: scale(1.04); }
+.asm-tl-play:active { transform: scale(0.95); }
+
+/* Track */
+.asm-tl-track { flex: 1; position: relative; height: 60px; display: flex; align-items: center; }
+.asm-tl-bar { position: absolute; left: 0; right: 0; height: 2px; background: var(--line-b); }
+.asm-tl-bar-fill { height: 100%; background: var(--accent); transition: width 0.5s var(--ease-out); opacity: 0.7; }
+
+.asm-tl-step {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.asm-tl-dot {
+  width: 28px; height: 28px;
+  border-radius: 0;
+  border: 1.5px solid var(--line-b);
+  background: var(--bg-3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--fg-dimmer);
+  transition: all 0.3s var(--ease-out);
+}
+.asm-tl-step.done .asm-tl-dot {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.asm-tl-step.current .asm-tl-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+  transform: scale(1.1);
+}
+
+.asm-tl-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.asm-tl-step.done .asm-tl-label,
+.asm-tl-step.current .asm-tl-label { color: var(--fg-dim); }
+
+/* Export button */
+.asm-next-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--fg-dim);
+  border: 1px solid var(--line-b);
+  border-radius: 0;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.asm-next-btn:hover {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}

@@ -1,0 +1,307 @@
+﻿/* â”€â”€ AssemblyVisualizer â€” Apple-style design system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* This view's chrome (phase label / layers panel / hint / timeline) floats
+   as light glass panels over a 3D viewport. Uses shared tokens from
+   configurator-tokens.css so panel styling stays consistent app-wide. */
+.asm-layout { display: flex; height: 100%; overflow: hidden; }
+.asm-main { flex: 1; position: relative; overflow: hidden; }
+
+.asm-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+/* â”€â”€ Phase label â€” top left â”€â”€ */
+.asm-phase-label {
+  position: absolute;
+  top: 80px;
+  left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 22px 18px;
+  pointer-events: none;
+  min-width: 200px;
+  animation: fadeUp 0.4s var(--ease-out) both;
+}
+
+.asm-ph-num {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+}
+
+.asm-ph-name {
+  font-family: var(--sans);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+
+.asm-ph-sub {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--fg-dim);
+  line-height: 1.5;
+  margin-top: 2px;
+  max-width: 200px;
+}
+
+.asm-ph-bar { height: 2px; border-radius: 1px; background: var(--line); margin-top: 10px; overflow: hidden; }
+.asm-ph-bar-fill { height: 100%; background: var(--accent); transition: width 0.6s var(--ease-out); opacity: 0.9; }
+
+/* â”€â”€ Layer toggle panel â€” right side â”€â”€ */
+.asm-layers-panel {
+  position: absolute;
+  top: 80px;
+  right: 28px;
+  width: 168px;
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+
+.asm-layers-title {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-dimmer);
+  padding: 0 4px 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+}
+
+.asm-layer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
+  text-align: left;
+  width: 100%;
+}
+.asm-layer-btn:hover:not(:disabled) { background: var(--bg-3); color: var(--fg); }
+.asm-layer-btn.hidden { opacity: 0.4; }
+.asm-layer-btn.hidden:hover:not(:disabled) { opacity: 0.7; }
+.asm-layer-btn.not-yet { opacity: 0.3; cursor: default; }
+
+.asm-layer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.asm-layer-name { flex: 1; }
+.asm-layer-eye { font-family: var(--sans); font-size: 11px; color: var(--fg-dimmer); opacity: 0.7; }
+.asm-layer-btn:not(.hidden) .asm-layer-eye { color: var(--accent); opacity: 0.9; }
+
+.asm-layers-reset {
+  margin-top: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-pill);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
+  width: 100%;
+}
+.asm-layers-reset:hover { background: var(--accent-dim); }
+
+/* â”€â”€ Start hint â”€â”€ */
+.asm-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-glass);
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 36px;
+  pointer-events: none;
+  animation: fadeIn 0.5s var(--ease-out) both;
+}
+
+.asm-hint-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Live "assembling" indicator â€” replaces the old press-play prompt */
+.asm-hint-icon-live {
+  position: relative;
+  animation: none;
+  background: transparent;
+  border-color: var(--accent-border);
+}
+.asm-hint-icon-live::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 2px solid var(--accent-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.asm-hint-text { font-family: var(--sans); font-size: 13px; color: var(--fg-dim); text-align: center; line-height: 1.6; }
+
+/* â”€â”€ Timeline dock â”€â”€ */
+.asm-timeline {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 84px;
+  background: linear-gradient(to top, rgba(255,255,255,0.98), rgba(255,255,255,0.88));
+  backdrop-filter: var(--blur-lg);
+  -webkit-backdrop-filter: var(--blur-lg);
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0 28px;
+}
+
+/* Controls */
+.asm-tl-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.asm-tl-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line-b);
+  background: var(--bg-2);
+  color: var(--fg-dim);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+  cursor: pointer;
+}
+.asm-tl-btn:hover:not(:disabled) { background: var(--bg-3); color: var(--fg); border-color: var(--line-b); }
+.asm-tl-btn:disabled { opacity: 0.3; cursor: default; }
+
+.asm-tl-play {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+.asm-tl-play:hover { opacity: 0.9; background: var(--accent-hover); }
+.asm-tl-play:active { transform: scale(0.96); }
+
+/* Track */
+.asm-tl-track { flex: 1; position: relative; height: 60px; display: flex; align-items: center; }
+.asm-tl-bar { position: absolute; left: 0; right: 0; height: 2px; border-radius: 1px; background: var(--line-b); }
+.asm-tl-bar-fill { height: 100%; background: var(--accent); transition: width 0.5s var(--ease-out); opacity: 0.85; }
+
+.asm-tl-step {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.asm-tl-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line-b);
+  background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--fg-dimmer);
+  transition: all 0.3s var(--ease-out);
+}
+.asm-tl-step.done .asm-tl-dot {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+.asm-tl-step.current .asm-tl-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.asm-tl-label {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--fg-dimmer);
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-out);
+}
+.asm-tl-step.done .asm-tl-label,
+.asm-tl-step.current .asm-tl-label { color: var(--fg-dim); }
+
+/* Export button */
+.asm-next-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--fg-dim);
+  border: 1px solid var(--line-b);
+  border-radius: var(--radius-pill);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+.asm-next-btn:hover {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}

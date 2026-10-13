@@ -1,0 +1,480 @@
+﻿/* â”€â”€ RoomHeroView â€” "View Your Home" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   The homeowner sees one finished rendered image of their home.
+   The 3D canvas only does the rendering work (hidden); the result
+   image(s) sit on top. Same Lithic Pulse glass tokens elsewhere. */
+
+.rhv-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  animation: rhvReveal 0.9s var(--ease-out, ease-out) both;
+}
+@keyframes rhvReveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Hidden render stage â€” present so WebGL keeps running, but behind the
+   overlay and non-interactive. Locked to a true 16:9 landscape box so the
+   captured screenshot (and therefore the AI render) is always a consistent
+   landscape frame, regardless of the browser window's actual aspect ratio â€”
+   without this, the camera's FOV/framing math gets fed a canvas of whatever
+   shape the window happens to be, silently distorting every shot. */
+.rhv-stage {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 1280px;
+  height: 720px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+.rhv-canvas { width: 1280px !important; height: 720px !important; display: block; }
+
+/* While the user is manually placing the camera, the stage becomes the
+   actual visible/interactive view (drag to orbit, scroll to zoom) instead
+   of a hidden capture target. */
+.rhv-stage--live {
+  opacity: 1;
+  pointer-events: auto;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100vw - 2.4rem);
+  max-height: calc(100vh - 2.4rem);
+  width: min(1280px, calc(100vw - 2.4rem));
+  height: min(720px, calc((100vw - 2.4rem) * 9 / 16));
+  cursor: grab;
+}
+.rhv-stage--live .rhv-canvas { width: 100% !important; height: 100% !important; }
+.rhv-stage--live:active { cursor: grabbing; }
+
+.rhv-place-overlay {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+.rhv-place-hint {
+  font-size: 0.78rem;
+  letter-spacing: -0.01em;
+  color: var(--fg-dim);
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+.rhv-place-btn { padding: 0.75rem 1.4rem; border-radius: var(--radius-pill); }
+
+/* Live "what the camera sees" thumbnail â€” its own small Canvas, shown while
+   placing the camera marker in the dollhouse view. */
+.rhv-preview-thumb {
+  position: absolute;
+  bottom: 1.2rem;
+  right: 1.2rem;
+  z-index: 6;
+  width: 260px;
+  height: 146px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-3);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.rhv-preview-thumb-label {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 1;
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--fg-dim);
+  background: var(--bg-glass);
+  padding: 0.3rem 0.6rem;
+}
+.rhv-preview-thumb-canvas { width: 100% !important; height: 100% !important; display: block; }
+
+.rhv-eyebrow {
+  position: absolute;
+  top: 1rem;
+  left: 1.2rem;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.55rem 0.9rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  pointer-events: none;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+.rhv-eyebrow-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+.rhv-eyebrow-unit {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+/* â”€â”€ Result overlay â”€â”€ */
+.rhv-shot-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* justify-content: center clips the top (the rendered image) off-screen
+     whenever the stacked content (image + actions + an open Render Controls
+     panel) is taller than the viewport, since a centered flex column with no
+     scroll just overflows both ways equally. Top-aligned + scrollable means
+     the image is always the first thing visible, and a tall controls panel
+     scrolls instead of pushing the image out of view. */
+  justify-content: flex-start;
+  overflow-y: auto;
+  gap: 1rem;
+  padding: 2rem;
+}
+/* During live placement this overlay renders no content, but being
+   position:absolute/inset:0 it still sits on top of the draggable 3D stage
+   and silently ate every drag/scroll event meant for OrbitControls â€” that's
+   why placement looked frozen. */
+.rhv-shot-overlay--inert { pointer-events: none; }
+
+.rhv-shot-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+.rhv-shot-loading-label {
+  font-size: 0.9rem;
+  letter-spacing: -0.01em;
+  color: var(--fg-dim);
+}
+.rhv-shot-loading-sub {
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+  color: var(--fg-dimmer);
+}
+
+.rhv-shot-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 560px;
+  text-align: center;
+}
+.rhv-shot-error-title { font-size: 0.95rem; font-weight: 600; color: var(--fg); }
+.rhv-shot-error-msg {
+  font-size: 0.75rem;
+  color: var(--red);
+  word-break: break-word;
+  line-height: 1.4;
+}
+.rhv-shot-img--raw { max-height: 42vh; opacity: 0.85; }
+
+.rhv-shot-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.rhv-shot-img {
+  max-width: 86vw;
+  max-height: 64vh;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.rhv-shot-thumbs {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.rhv-shot-thumb {
+  position: relative;
+  width: 120px;
+  height: 80px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s var(--ease-out);
+}
+.rhv-shot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rhv-shot-thumb span {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  padding: 0.25rem 0.4rem;
+  background: rgba(255,255,255,0.85);
+  color: var(--fg);
+}
+.rhv-shot-thumb:hover { border-color: var(--line-b); }
+.rhv-shot-thumb.active { border-color: var(--accent); }
+
+.rhv-shot-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* â”€â”€ Buttons (shared look) â”€â”€ */
+.rhv-render-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--fg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0.7rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-render-btn:hover { background: var(--bg-3); }
+
+.rhv-ai-enhance-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 0.7rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-ai-enhance-btn:hover { background: var(--accent-dim); }
+
+.rhv-next-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0.7rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-next-btn:hover { background: var(--accent-hover); }
+
+/* â”€â”€ Loading state â€” ticking readout, not a generic ring spinner â”€â”€ */
+.rhv-ai-loader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--accent);
+}
+.rhv-ai-loader-bar {
+  width: 40px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-dim);
+  overflow: hidden;
+  position: relative;
+}
+.rhv-ai-loader-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  animation: rhvScan 1.1s var(--ease-out) infinite;
+}
+@keyframes rhvScan {
+  0%   { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* â”€â”€ Camera nudge controls (View Your Home) â”€â”€ */
+.rhv-cam-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+.rhv-cam-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--fg-dimmer);
+  margin-right: 0.2rem;
+}
+.rhv-cam-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  color: var(--fg);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-cam-btn:hover { background: var(--bg-4); }
+.rhv-cam-btn--reset {
+  width: auto;
+  padding: 0 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.7rem;
+  letter-spacing: -0.01em;
+  color: var(--red);
+  border-color: rgba(201,74,44,0.3);
+}
+
+/* â”€â”€ Render Controls panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.rhv-render-btn--active { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+
+.rhv-rc {
+  margin: 14px auto 0;
+  max-width: 540px;
+  width: 92%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  text-align: left;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  max-height: 62vh;
+  overflow-y: auto;
+}
+.rhv-rc-title {
+  font-family: var(--sans);
+  font-size: 0.85rem; letter-spacing: -0.01em;
+  color: var(--fg); margin-bottom: 14px; font-weight: 600;
+}
+.rhv-rc-group { margin-bottom: 14px; }
+.rhv-rc-group--dim { opacity: 0.5; }
+.rhv-rc-label {
+  display: block; font-size: 0.75rem; letter-spacing: -0.01em;
+  color: var(--fg-dim); margin-bottom: 6px;
+}
+.rhv-rc-val { color: var(--accent); font-weight: 600; }
+
+.rhv-rc-engines { display: flex; flex-wrap: wrap; gap: 6px; }
+.rhv-rc-engine {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 7px 11px; border-radius: var(--radius-sm); cursor: pointer;
+  background: var(--bg-3); border: 1px solid var(--line);
+  color: var(--fg-dim); min-width: 0;
+  transition: background 0.15s var(--ease-out), border-color 0.15s var(--ease-out);
+}
+.rhv-rc-engine:hover { background: var(--bg-4); }
+.rhv-rc-engine--on { background: var(--accent-dim); border-color: var(--accent-border); }
+.rhv-rc-engine-name { font-size: 0.78rem; font-weight: 600; }
+.rhv-rc-engine-hint { font-size: 0.65rem; color: var(--fg-dimmer); margin-top: 1px; }
+.rhv-rc-engine--on .rhv-rc-engine-name { color: var(--accent); }
+
+.rhv-rc-refs { display: flex; flex-wrap: wrap; gap: 8px; }
+.rhv-rc-ref {
+  width: 84px; height: 48px; border-radius: var(--radius-sm); overflow: hidden;
+  padding: 0; cursor: pointer; background: var(--bg-4);
+  border: 2px solid var(--line);
+}
+.rhv-rc-ref img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rhv-rc-ref--on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.rhv-rc-ref-noimg { font-size: 0.6rem; color: var(--fg-dimmer); padding: 4px; display: block; }
+.rhv-rc-empty { font-size: 0.75rem; color: var(--fg-dimmer); }
+
+.rhv-rc-slider { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.rhv-rc-scale {
+  display: flex; justify-content: space-between;
+  font-size: 0.62rem; color: var(--fg-dimmer); margin-top: 2px;
+}
+
+.rhv-rc-prompt {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  background: var(--bg); border: 1px solid var(--line-b);
+  border-radius: var(--radius-sm); color: var(--fg); font-size: 0.75rem; line-height: 1.5;
+  padding: 8px 10px; font-family: inherit;
+}
+.rhv-rc-prompt:focus { outline: none; border-color: var(--accent-border); }
+.rhv-rc-reset {
+  margin-top: 6px; font-size: 0.68rem; color: var(--fg-dim); background: none;
+  border: none; cursor: pointer; text-decoration: underline; padding: 0;
+}
+
+.rhv-rc-render {
+  width: 100%; margin-top: 8px; padding: 11px;
+  background: var(--accent); color: #fff; border: none; border-radius: var(--radius-pill);
+  font-weight: 500; font-size: 0.85rem; cursor: pointer;
+  font-family: var(--sans); letter-spacing: -0.01em;
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-rc-render:hover { background: var(--accent-hover); }
+
+/* â”€â”€ Render Controls: advanced params â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.rhv-rc-prompt--sm { font-size: 0.7rem; }
+.rhv-rc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
+.rhv-rc-check { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--fg-dim); cursor: pointer; }
+.rhv-rc-check input { accent-color: var(--accent); cursor: pointer; }
+.rhv-rc-num {
+  width: 130px; background: var(--bg); border: 1px solid var(--line-b);
+  border-radius: var(--radius-sm); color: var(--fg); font-size: 0.75rem; padding: 5px 8px; font-family: inherit;
+}
+.rhv-rc-num:disabled { opacity: 0.45; cursor: not-allowed; }
+.rhv-rc-num:focus { outline: none; border-color: var(--accent-border); }
+.rhv-rc-note { font-size: 0.62rem; color: var(--fg-dimmer); margin-top: 3px; }
+.rhv-rc-note-inline { font-size: 0.62rem; color: var(--fg-dimmer); font-weight: 400; }
+
+.rhv-rc-fmt { display: flex; gap: 6px; }
+.rhv-rc-fmt-btn {
+  padding: 5px 14px; border-radius: var(--radius-pill); cursor: pointer; font-size: 0.72rem; font-weight: 500;
+  background: var(--bg-3); border: 1px solid var(--line); color: var(--fg-dim);
+  transition: background 0.15s var(--ease-out);
+}
+.rhv-rc-fmt-btn:hover { background: var(--bg-4); }
+.rhv-rc-fmt-btn--on { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }

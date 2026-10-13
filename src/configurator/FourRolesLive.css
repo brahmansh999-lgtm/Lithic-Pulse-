@@ -1,0 +1,92 @@
+.frl-root {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  color: var(--fg);
+  display: flex; flex-direction: column;
+  padding: 22px 32px;
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+/* ── Top bar — shared controls ── */
+.frl-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+.frl-title-block { display: flex; align-items: center; gap: 14px; }
+.frl-back {
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  background: var(--bg-2); border: 1px solid var(--line);
+  color: var(--fg); font-size: 1rem;
+  transition: background 0.2s var(--ease-out);
+}
+.frl-back:hover { background: var(--bg-3); }
+.frl-eyebrow { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; color: var(--fg-dim); margin-bottom: 4px; }
+.frl-title { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.01em; font-family: var(--sans); color: var(--fg); }
+
+.frl-controls { display: flex; gap: 16px; flex-wrap: wrap; }
+.frl-ctrl { display: flex; flex-direction: column; gap: 5px; }
+.frl-ctrl-label { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-dimmer); }
+.frl-seg { display: flex; gap: 2px; background: var(--bg-2); padding: 3px; border-radius: var(--radius-pill); border: 1px solid var(--line); }
+.frl-seg-btn {
+  padding: 5px 10px; border-radius: var(--radius-pill); cursor: pointer; border: none;
+  background: transparent; color: var(--fg-dim);
+  font-size: 12px; font-family: var(--sans); transition: all 0.2s var(--ease-out);
+}
+.frl-seg-btn.on { background: var(--fg); color: var(--bg); font-weight: 500; }
+
+/* ── Four quadrants ── */
+.frl-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; min-height: 0; }
+.frl-quad {
+  position: relative; border-radius: var(--radius-lg); padding: 22px 26px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.frl-quad::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.frl-quad--home::before { background: var(--green); }
+.frl-quad--arch::before { background: var(--accent); }
+.frl-quad--mfg::before  { background: #a68a5b; }
+.frl-quad--sup::before  { background: var(--fg-dim); }
+
+.frl-quad-head { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; color: var(--fg-dim); margin-bottom: 14px; }
+.frl-quad-dot { width: 8px; height: 8px; border-radius: 50%; }
+.frl-quad--home .frl-quad-dot { background: var(--green); }
+.frl-quad--arch .frl-quad-dot { background: var(--accent); }
+.frl-quad--mfg  .frl-quad-dot { background: #a68a5b; }
+.frl-quad--sup  .frl-quad-dot { background: var(--fg-dim); }
+
+.frl-quad-hero {
+  font-size: 3.4rem; font-weight: 600; line-height: 1; font-family: var(--sans); color: var(--fg);
+  letter-spacing: -0.02em;
+  transition: color 0.3s var(--ease-out);
+}
+.frl-green { color: var(--green) !important; }
+.frl-quad-sub { font-size: 12px; color: var(--fg-dimmer); margin-top: 6px; }
+
+.frl-quad-rows { margin-top: auto; display: flex; flex-direction: column; gap: 7px; }
+.frl-qrow { display: flex; align-items: baseline; justify-content: space-between; font-size: 13px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.frl-qrow span { color: var(--fg-dimmer); }
+.frl-qrow b { color: var(--fg); font-weight: 600; }
+
+.frl-footnote { text-align: center; font-size: 12px; color: var(--fg-dimmer); margin-top: 14px; }
+
+/* Subtle pop animation on the hero figures when they change */
+@keyframes frlPulse { 0% { transform: scale(1); } 40% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+/* Animated live numbers + flash */
+.frl-livenum { display: inline-block; transition: color 0.2s var(--ease-out); }
+.frl-flash-down { animation: frlPulse 0.5s var(--ease-out); color: var(--green) !important; }
+.frl-flash-up   { animation: frlPulse 0.5s var(--ease-out); color: var(--red) !important; }
+
+/* Consequence banner */
+.frl-consequence {
+  text-align: center; margin-top: 14px; padding: 11px 18px; border-radius: var(--radius);
+  font-size: 13px; color: var(--fg-dimmer);
+  border: 1px solid transparent; transition: all 0.3s var(--ease-out);
+}
+.frl-consequence.on {
+  color: var(--fg); background: rgba(63,143,87,0.08);
+  border-color: rgba(63,143,87,0.3);
+}
+.frl-conseq-tag { color: var(--green); font-weight: 600; margin-right: 6px; }

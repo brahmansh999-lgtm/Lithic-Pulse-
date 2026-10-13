@@ -1,0 +1,89 @@
+.frl-root {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, #14161a 0%, #0a0b0d 70%);
+  color: #e8e4da;
+  display: flex; flex-direction: column;
+  padding: 22px 32px;
+  font-family: var(--mono, 'DM Mono', monospace);
+  overflow: hidden;
+}
+
+/* ── Top bar — shared controls ── */
+.frl-topbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+.frl-title-block { display: flex; align-items: center; gap: 14px; }
+.frl-back {
+  width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  color: #e8e4da; font-size: 1rem;
+}
+.frl-eyebrow { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(232,228,218,0.5); margin-bottom: 4px; }
+.frl-title { font-size: 1.4rem; font-family: 'DM Serif Display', serif; color: #f0ece2; }
+
+.frl-controls { display: flex; gap: 16px; flex-wrap: wrap; }
+.frl-ctrl { display: flex; flex-direction: column; gap: 5px; }
+.frl-ctrl-label { font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(232,228,218,0.4); }
+.frl-seg { display: flex; gap: 2px; background: rgba(255,255,255,0.03); padding: 3px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.08); }
+.frl-seg-btn {
+  padding: 5px 10px; border-radius: 5px; cursor: pointer; border: none;
+  background: transparent; color: rgba(232,228,218,0.55);
+  font-size: 0.62rem; font-family: var(--mono, monospace); transition: all 0.15s;
+}
+.frl-seg-btn.on { background: rgba(232,228,218,0.92); color: #0a0b0d; font-weight: 600; }
+
+/* ── Four quadrants ── */
+.frl-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 14px; min-height: 0; }
+.frl-quad {
+  position: relative; border-radius: 14px; padding: 22px 26px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.frl-quad::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.frl-quad--home::before { background: #6dbb82; }
+.frl-quad--arch::before { background: #8dab80; }
+.frl-quad--mfg::before  { background: #c8a870; }
+.frl-quad--sup::before  { background: #5ba3c9; }
+
+.frl-quad-head { display: flex; align-items: center; gap: 8px; font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(232,228,218,0.6); margin-bottom: 14px; }
+.frl-quad-dot { width: 8px; height: 8px; border-radius: 50%; }
+.frl-quad--home .frl-quad-dot { background: #6dbb82; }
+.frl-quad--arch .frl-quad-dot { background: #8dab80; }
+.frl-quad--mfg  .frl-quad-dot { background: #c8a870; }
+.frl-quad--sup  .frl-quad-dot { background: #5ba3c9; }
+
+.frl-quad-hero {
+  font-size: 3.4rem; line-height: 1; font-family: 'DM Serif Display', serif; color: #f0ece2;
+  transition: color 0.3s;
+}
+.frl-green { color: #8dab80 !important; }
+.frl-quad-sub { font-size: 0.66rem; color: rgba(232,228,218,0.45); margin-top: 6px; }
+
+.frl-quad-rows { margin-top: auto; display: flex; flex-direction: column; gap: 7px; }
+.frl-qrow { display: flex; align-items: baseline; justify-content: space-between; font-size: 0.7rem; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.frl-qrow span { color: rgba(232,228,218,0.45); }
+.frl-qrow b { color: #f0ece2; font-weight: 600; }
+
+.frl-footnote { text-align: center; font-size: 0.62rem; color: rgba(232,228,218,0.4); margin-top: 14px; }
+
+/* Subtle pop animation on the hero figures when they change */
+@keyframes frlPulse { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+
+/* Animated live numbers + flash */
+.frl-livenum { display: inline-block; transition: color 0.2s; }
+.frl-flash-down { animation: frlPulse 0.5s ease; color: #8dab80 !important; }
+.frl-flash-up   { animation: frlPulse 0.5s ease; color: #e0a060 !important; }
+
+/* Consequence banner */
+.frl-consequence {
+  text-align: center; margin-top: 14px; padding: 11px 18px; border-radius: 10px;
+  font-size: 0.68rem; color: rgba(232,228,218,0.45);
+  border: 1px solid transparent; transition: all 0.3s;
+}
+.frl-consequence.on {
+  color: #f0ece2; background: rgba(141,171,128,0.08);
+  border-color: rgba(141,171,128,0.3);
+}
+.frl-conseq-tag { color: #8dab80; font-weight: 600; margin-right: 6px; }

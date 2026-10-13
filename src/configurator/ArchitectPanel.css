@@ -1,0 +1,73 @@
+/* ── ArchitectPanel — docked in View Your Home (top-right), above the
+   camera preview thumbnail. Reuses ArchitectReview.css's .ar-* tokens for
+   notes/chips/forms so it reads as the same design system, just in a
+   narrower, collapsible dock instead of a full-page step. ── */
+
+.ap-panel {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  z-index: 6;
+  width: 300px;
+  max-height: calc(100% - 146px - 1.2rem - 1.2rem - 1rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+}
+.ap-panel--collapsed { max-height: none; }
+
+.ap-panel-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+}
+.ap-panel--collapsed .ap-panel-head { border-bottom: none; }
+
+.ap-panel-title {
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.ap-panel-head-right { display: flex; align-items: center; gap: 0.5rem; }
+.ap-panel-count {
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--fg-dim);
+  background: var(--bg-3);
+  border-radius: var(--radius-pill);
+  padding: 0.1rem 0.5rem;
+}
+.ap-panel-chevron { font-size: 0.7rem; color: var(--fg-dim); }
+
+.ap-panel-body {
+  overflow-y: auto;
+  padding: 0.7rem 0.8rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ap-count-pills { flex-wrap: wrap; }
+
+.ap-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ap-notes-empty { padding: 1rem 0.2rem; line-height: 1.5; }
+.ap-note-card { gap: 4px; }
+.ap-note-status-group { flex-wrap: wrap; }
+
+.ap-download-btn { width: 100%; }

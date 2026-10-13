@@ -1,0 +1,200 @@
+{
+  "cellSize": 3.0,
+  "wallHeight": 2.8,
+  "wallThickness": 0.115,
+
+  "rooms": {
+    "ROOM1": {
+      "gridX": 3, "gridZ": 2,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],
+        [0,2],[1,2],[2,2],[3,2]
+      ],
+      "wetZones": [
+        { "label": "Bath", "cells": [[2,0],[2,1],[3,0],[3,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 2, "rowStart": 0, "rowEnd": 1, "removable": true,  "movable": false, "label": "Bath divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "single",  "x": 0.5, "z": 0.5, "rot": 0  },
+        { "id": "f2", "type": "sofa",    "variant": "2seat",   "x": 1.5, "z": 1.2, "rot": 0  },
+        { "id": "f3", "type": "table",   "variant": "coffee",  "x": 1.5, "z": 0.7, "rot": 0  },
+        { "id": "f4", "type": "storage", "variant": "wardrobe","x": 0.1, "z": 1.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM2": {
+      "gridX": 4, "gridZ": 2,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],
+        [0,2],[1,2],[2,2],[3,2],[4,2]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[3,0],[3,1],[4,0],[4,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 2, "rowStart": 0, "rowEnd": 2, "removable": false, "movable": true,  "moveRange": [1,3], "label": "Bedroom divide" },
+        { "id": "w2", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 1, "removable": true,  "movable": false, "label": "Bath divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 2.8, "z": 0.5, "rot": 0  },
+        { "id": "f2", "type": "sofa",    "variant": "3seat",   "x": 1.2, "z": 1.4, "rot": 0  },
+        { "id": "f3", "type": "table",   "variant": "dining2", "x": 1.0, "z": 0.6, "rot": 0  },
+        { "id": "f4", "type": "storage", "variant": "wardrobe","x": 2.5, "z": 1.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM3": {
+      "gridX": 4, "gridZ": 3,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],
+        [0,3],[1,3],[2,3],[3,3],[4,3]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[3,0],[3,1],[4,0],[4,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 2, "rowStart": 0, "rowEnd": 3, "removable": false, "movable": true, "moveRange": [1,3], "label": "Bedroom 1 divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 2, "colEnd": 4, "removable": true,  "movable": true, "moveRange": [1,2], "label": "Bedroom 2 divide" },
+        { "id": "w3", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 1, "removable": true,  "movable": false, "label": "Bath divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 2.8, "z": 0.5, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "single",  "x": 3.2, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "sofa",    "variant": "3seat",   "x": 0.8, "z": 2.2, "rot": 0  },
+        { "id": "f4", "type": "table",   "variant": "dining4", "x": 1.0, "z": 1.5, "rot": 0  },
+        { "id": "f5", "type": "storage", "variant": "wardrobe","x": 2.5, "z": 2.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM4": {
+      "gridX": 5, "gridZ": 3,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],
+        [0,3],[1,3],[2,3],[3,3],[4,3],[5,3]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[4,0],[4,1],[5,0],[5,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 3, "removable": false, "movable": true, "moveRange": [2,4], "label": "Bedroom divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 0, "colEnd": 3, "removable": true,  "movable": true, "moveRange": [1,2], "label": "Living divide" },
+        { "id": "w3", "axis": "Z", "col": 4, "rowStart": 0, "rowEnd": 1, "removable": true,  "movable": false, "label": "Bath divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 3.8, "z": 0.5, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "double",  "x": 3.8, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "sofa",    "variant": "3seat",   "x": 1.2, "z": 2.2, "rot": 0  },
+        { "id": "f4", "type": "table",   "variant": "dining4", "x": 1.0, "z": 1.2, "rot": 0  },
+        { "id": "f5", "type": "storage", "variant": "wardrobe","x": 4.8, "z": 1.8, "rot": 0  },
+        { "id": "f6", "type": "storage", "variant": "shelving","x": 3.2, "z": 2.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM5": {
+      "gridX": 5, "gridZ": 4,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],
+        [0,4],[1,4],[2,4],[3,4],[4,4],[5,4]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[4,0],[4,1],[5,0],[5,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 4, "removable": false, "movable": true, "moveRange": [2,4], "label": "Main divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 3, "colEnd": 5, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Bed 2/3 divide" },
+        { "id": "w3", "axis": "X", "row": 2, "colStart": 0, "colEnd": 3, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Living divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 4.0, "z": 0.6, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "single",  "x": 4.0, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "bed",     "variant": "single",  "x": 3.5, "z": 3.5, "rot": 0  },
+        { "id": "f4", "type": "sofa",    "variant": "3seat",   "x": 1.2, "z": 2.5, "rot": 0  },
+        { "id": "f5", "type": "table",   "variant": "dining4", "x": 1.0, "z": 1.2, "rot": 0  },
+        { "id": "f6", "type": "storage", "variant": "wardrobe","x": 4.8, "z": 1.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM6": {
+      "gridX": 6, "gridZ": 4,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],
+        [0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[5,0],[5,1],[6,0],[6,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 4, "removable": false, "movable": true, "moveRange": [2,5], "label": "Main divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 3, "colEnd": 6, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Bed 2/3 divide" },
+        { "id": "w3", "axis": "X", "row": 2, "colStart": 0, "colEnd": 3, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Living divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 4.5, "z": 0.6, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "double",  "x": 4.5, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "bed",     "variant": "single",  "x": 3.5, "z": 3.5, "rot": 0  },
+        { "id": "f4", "type": "sofa",    "variant": "3seat",   "x": 1.5, "z": 2.8, "rot": 0  },
+        { "id": "f5", "type": "table",   "variant": "dining6", "x": 1.2, "z": 1.2, "rot": 0  },
+        { "id": "f6", "type": "storage", "variant": "wardrobe","x": 5.8, "z": 1.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM7": {
+      "gridX": 6, "gridZ": 4,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],
+        [0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4]
+      ],
+      "wetZones": [
+        { "label": "Bath",    "cells": [[5,0],[5,1],[6,0],[6,1]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 4, "removable": false, "movable": true, "moveRange": [2,5], "label": "Main divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 3, "colEnd": 6, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Bed divide" },
+        { "id": "w3", "axis": "X", "row": 2, "colStart": 0, "colEnd": 3, "removable": true,  "movable": true, "moveRange": [1,3], "label": "Living divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 4.5, "z": 0.6, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "double",  "x": 4.5, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "bed",     "variant": "single",  "x": 5.5, "z": 3.5, "rot": 0  },
+        { "id": "f4", "type": "sofa",    "variant": "3seat",   "x": 1.5, "z": 2.8, "rot": 0  },
+        { "id": "f5", "type": "table",   "variant": "dining6", "x": 1.2, "z": 1.2, "rot": 0  },
+        { "id": "f6", "type": "storage", "variant": "wardrobe","x": 3.2, "z": 3.8, "rot": 0  }
+      ]
+    },
+
+    "ROOM8": {
+      "gridX": 6, "gridZ": 5,
+      "columns": [
+        [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],
+        [0,5],[1,5],[2,5],[3,5],[4,5],[5,5],[6,5]
+      ],
+      "wetZones": [
+        { "label": "Bath 1",  "cells": [[5,0],[5,1],[6,0],[6,1]] },
+        { "label": "Bath 2",  "cells": [[5,3],[5,4],[6,3],[6,4]] },
+        { "label": "Kitchen", "cells": [[0,0],[0,1]] }
+      ],
+      "walls": [
+        { "id": "w1", "axis": "Z", "col": 3, "rowStart": 0, "rowEnd": 5, "removable": false, "movable": true, "moveRange": [2,4], "label": "Main divide" },
+        { "id": "w2", "axis": "X", "row": 2, "colStart": 3, "colEnd": 6, "removable": true,  "movable": true, "moveRange": [1,4], "label": "Bed 1/2 divide" },
+        { "id": "w3", "axis": "X", "row": 3, "colStart": 0, "colEnd": 3, "removable": true,  "movable": true, "moveRange": [2,4], "label": "Living divide" }
+      ],
+      "furniture": [
+        { "id": "f1", "type": "bed",     "variant": "double",  "x": 4.5, "z": 0.6, "rot": 0  },
+        { "id": "f2", "type": "bed",     "variant": "double",  "x": 4.5, "z": 2.5, "rot": 0  },
+        { "id": "f3", "type": "bed",     "variant": "double",  "x": 4.5, "z": 4.2, "rot": 0  },
+        { "id": "f4", "type": "bed",     "variant": "single",  "x": 3.5, "z": 4.2, "rot": 0  },
+        { "id": "f5", "type": "sofa",    "variant": "3seat",   "x": 1.2, "z": 3.5, "rot": 0  },
+        { "id": "f6", "type": "table",   "variant": "dining6", "x": 1.0, "z": 1.5, "rot": 0  },
+        { "id": "f7", "type": "storage", "variant": "wardrobe","x": 3.2, "z": 0.2, "rot": 0  }
+      ]
+    }
+  }
+}
