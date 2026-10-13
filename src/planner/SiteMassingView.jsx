@@ -238,8 +238,10 @@ export default function SiteMassingView({ site, siteBounds, buildingType: buildi
           zoomControl={false}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+            className="basemap-light"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            maxNativeZoom={19}
             maxZoom={22}
           />
           {coords.length >= 3 && (

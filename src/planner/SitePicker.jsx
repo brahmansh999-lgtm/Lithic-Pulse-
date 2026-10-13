@@ -615,8 +615,9 @@ export default function SitePicker({ onConfirm, onBack, role }) {
             preferCanvas={true}
           >
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              className="basemap-light"
+              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
               maxZoom={19}
             />
 
